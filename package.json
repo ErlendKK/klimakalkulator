@@ -1,0 +1,19 @@
+{
+  "name": "klimakalkulator",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev-back": "cd server && python create_db.py && python app.py",
+    "reset": "cd server && python reset_db.py",
+    "test-db": "cd server && python handle_db.py",
+    "dev-front": "cd frontend && npm run dev",
+    "setup": "npm install && cd server && pip install -r requirements.txt && cd ../frontend && npm install && cd .."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "vue-select": "^3.20.3"
+  }
+}
