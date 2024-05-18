@@ -2,24 +2,24 @@ from flask import Flask, session, jsonify, request
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
-from handle_db import add_userdata_to_db, validate_and_return_user_data, get_userdata_from_db, add_product_data, delete_product_data, update_product_data, get_project_data, post_project_to_db, update_project_data
+from handle_db import add_userdata_to_db, validate_and_return_user_data, get_userdata_from_db, add_product_data, delete_product_data, update_product_data, get_project_data, post_project_to_db, delete_project_data, update_project_data
 import requests
 import uuid
 import os
 from werkzeug.utils import secure_filename
 
-
-# gets current directory and sets UPLOAD_FOLDER = cd/profilephotos
 SERVER_URL = "http://localhost:5000"
 ECOPORTAL_API_TOKEN = 'eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJFcmxlbmQiLCJpc3MiOiJFQ09QT1JUQUwiLCJhdWQiOiJhbnkiLCJ2ZXIiOiI3LjkuNyIsInBlcm1pc3Npb25zIjpbInVzZXI6cmVhZCx3cml0ZTo2ODgiLCJzdG9jazpyZWFkLGV4cG9ydDoyIiwic3RvY2s6cmVhZCxleHBvcnQ6MSJdLCJyb2xlcyI6W10sImlhdCI6MTcxMjU3NTA4NSwiZXhwIjoxNzIwNDU5MDg1LCJlbWFpbCI6ImVybGVuZGtAbGl2ZS5jb20iLCJ0aXRsZSI6ImhoIiwiZmlyc3ROYW1lIjoiRXJsZW5kICIsImxhc3ROYW1lIjoiS3ZpdHJ1ZCIsImdlbmVyYXRlTmV3VG9rZW5zIjpmYWxzZSwiam9iUG9zaXRpb24iOiJFbmdpbmVlciIsImFkZHJlc3MiOnsiY2l0eSI6IlN0YXZhbmdlciIsInppcENvZGUiOiI0MDE2IiwiY291bnRyeSI6Ik5PIiwic3RyZWV0IjoiIn0sIm9yZ2FuaXphdGlvbiI6e30sInVzZXJHcm91cHMiOlt7InVzZXJHcm91cE5hbWUiOiJyZWdpc3RlcmVkX3VzZXJzIiwidXNlckdyb3VwT3JnYW5pemF0aW9uTmFtZSI6IkRlZmF1bHQgT3JnYW5pemF0aW9uIn1dLCJhZG1pbmlzdHJhdGVkT3JnYW5pemF0aW9uc05hbWVzIjoiIiwicGhvbmUiOiI5NzExMTg0MSIsImRzcHVycG9zZSI6IkFuIExDQSB3ZWJhcHAgIiwic2VjdG9yIjoiIiwiaW5zdGl0dXRpb24iOiJWZW5pIn0.ru36AZheBwYK8_N3d9YNBYfLIcEWMtmOV0hNs7a_sgGPheZL9DVrjJXdotypysodIJGTvMd-QqEALyCVOms3ntABTDYB4NCBqydJLTX1H8R8Gu0AvNIldtRxhhrEfEpjzLnv0itddlMuRqYVxB46EAP3eNft4NXqvpyHdJS73Pk'
 ECOPORTAL_BASE_URL = 'https://epdnorway.lca-data.com/resource/processes'
+
+# gets current directory and sets UPLOAD_FOLDER = cd/profilephotos
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
 UPLOAD_FOLDER = os.path.join(os.getcwd(), 'user_data')
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
-
 app = Flask(__name__, static_folder=UPLOAD_FOLDER)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
 app.debug = True
 app.secret_key = os.getenv('FLASK_SECRET_KEY', 'default-secret-key')
 
@@ -32,7 +32,6 @@ production_origins = ["https://my-production-frontend.com"]
 allowed_origins = development_origins if app.debug else production_origins
 
 CORS(app, supports_credentials=True, origins=allowed_origins) 
-
 
 uuid_list = [
   "94506cde-817c-4307-bef0-4a317b894e95",
@@ -60,6 +59,17 @@ def update_project():
         return jsonify(db_response), 200
     else:
         return jsonify(db_response), 400  
+    
+
+@app.route('/projects/delete/<project_id>', methods=['DELETE'])
+def delete_project(project_id):
+    print(f'delete_project called for {project_id}')
+    db_response = delete_project_data(project_id)
+
+    if db_response['status'] == 'success':
+        return jsonify(db_response), 200
+    else:
+        return jsonify(db_response), 400   
 
 
 @app.route('/products/delete/<product_id>', methods=['DELETE'])
@@ -119,7 +129,7 @@ def ecoportal_properties(uuid):
 
 @app.route('/products/add', methods=['POST'])
 def add_product_to_project():
-    """Takes aas input a json containing 'project_id' and product data from the ecoportal product-list
+    """Takes as input a json containing 'project_id' and product data from the ecoportal product-list
     Returns a json containing "emission_factors" (dict of floats) and unit (string)
     """
     data = request.get_json()
@@ -325,6 +335,7 @@ def login_user():
     user_data = validate_and_return_user_data(login_data) # returns (name, email, photo_filename, and project_list)
 
     if user_data['status'] != 'success':
+        print(user_data['message'])
         return jsonify(user_data), 401  
 
     session.clear()

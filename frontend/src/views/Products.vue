@@ -11,11 +11,11 @@
             @click="toggleAddModal">
             Nytt Produkt
           </button>
-          <product-modal
+          <product-add-modal
             :is-active="isAddModalActive"
             @close="isAddModalActive = false"
             @submit-product="handleAddModalSubmit">
-          </product-modal>
+          </product-add-modal>
           <!-- Open productUpdateModal to add new product to the project -->
           <!-- Uses v-if to trigger mounted() everytime its activated -->
           <Product-update-modal
@@ -63,9 +63,10 @@
                       <i class="fa-solid fa-ellipsis"></i>
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-                      <li><a class="dropdown-item" href="#" @click="deleteButtonHandler(product)">Slett</a></li>
                       <li><a class="dropdown-item" href="#" @click="editButtonHandler(product)">Rediger</a></li>
                       <li><a class="dropdown-item" href="#" @click="copyButtonHandler(product)">Lag kopi</a></li>
+                      <div class="dropdown-divider"></div>
+                      <li><a class="dropdown-item" href="#" @click="deleteButtonHandler(product)">Slett</a></li>
                     </ul>
                   </div>
                 </td>
@@ -90,22 +91,23 @@
 <script>
   import NavHeader from '../components/NavHeader.vue';
   import NavFooter from '../components/NavFooter.vue';
-  import ProductModal from '../components/ProductModal.vue';
+  import ProductAddModal from '../components/ProductAddModal.vue';
   import ProductUpdateModal from '../components/ProductUpdateModal.vue';
+  import cloneDeep from 'lodash/cloneDeep';
   import { getData, postData, deleteData, updateData } from '../utils/http-requests.js'
+  import { displaySuccessToast, displayErrorToast, displayWarningToast } from '../utils/toasts.js'
   import { saveToLocalStorage, getFromLocalStorage } from '../utils/local-storage.js'
   import { setDisplayedName } from '../utils/misc.js'
   
   import { useAuthStore } from '../stores/authStore';
   import { computed } from 'vue';
-  import { useToast } from "vue-toastification";
 
   export default {
       name: 'Products',
       components: {
         NavHeader,
         NavFooter,
-        ProductModal,
+        ProductAddModal,
         ProductUpdateModal
       },
 
@@ -116,7 +118,6 @@
         const userComputed = computed(() => authStore.user);
         const currentProject = computed(() => authStore.currentProject);
         const productList = computed(() => currentProject.value?.products ?? []);
-        const toast = useToast();
         const pushToProducts = authStore.pushToProducts;
         const popFromProducts = authStore.popFromProducts;
 
@@ -125,23 +126,10 @@
           return project ? `Produktoversikt: ${project.name}` : 'Prosjekt er ikke valgt';
         });
 
-        function displaySuccessToast(message="Suksess!") {
-          toast.success(message);
-        }
-
-        function displayErrorToast(message="Error!") {
-          toast.error(message);
-        }
-
-        function displayWarningToast(message="Obs!") {
-          toast.warning(message);
-        }
-
         console.log(`Projectname: ${currentProject.value?.name}\nid: ${currentProject.value?.project_id}\nnumber of products: ${productList.value.length}`);
 
         return { isLoggedInComputed, userComputed, currentProject, heading, 
-          productList, pushToProducts, popFromProducts, displaySuccessToast, 
-          displayErrorToast, displayWarningToast 
+          productList, pushToProducts, popFromProducts
         };
       },
 
@@ -193,6 +181,7 @@
             ...productData.product,
             project_id: this.currentProject.project_id
         };
+        // product.product is now part of the main object
         delete fullProjectData.product;
         console.log(fullProjectData)
 
@@ -201,12 +190,12 @@
 
         if (newProduct.status === 'failed') {
           const message = newProduct?.message ?? 'En feil har oppstått!';
-          this.displayErrorToast(message);
+          displayErrorToast(message);
           return;
         }
         
         this.pushToProducts(newProduct);
-        this.displaySuccessToast('Produktet er registrert')
+        displaySuccessToast('Produktet er registrert')
         this.isAddModalActive = false;
       },
 
@@ -218,13 +207,13 @@
 
         if (db_response.status === 'failed') {
           const message = db_response?.message ?? 'Produktet kunne ikke oppdateres!';
-          this.displayErrorToast(message);
+          displayErrorToast(message);
           return;
         }
         
         this.popFromProducts(productData.product_id);
         this.pushToProducts(productData);
-        this.displaySuccessToast('Produktet er oppdatert')
+        displaySuccessToast('Produktet er oppdatert')
         this.isUpdateModalActive = false;
       },
 
@@ -235,11 +224,11 @@
         
         if (db_response.status !== 'success') {
           const message = db_response?.message ?? 'Produtet kunne ikke slettes!';
-          this.displayErrorToast(message);
+          displayErrorToast(message);
           return;
         }
 
-        this.displaySuccessToast('Produktet er slettet!')
+        displaySuccessToast('Produktet er slettet!')
         this.popFromProducts(product_id);
       },
 
@@ -250,6 +239,7 @@
       },
       copyButtonHandler(product) {
         console.log('Copying product:', product.name);
+        product = cloneDeep(product);
         product.product = {};
         console.log(product);
         this.handleAddModalSubmit(product);

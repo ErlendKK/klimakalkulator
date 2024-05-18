@@ -6,13 +6,6 @@
 
 ## Prioritering
 
-sprint1
-* finn ut hvordan jeg bruker API-en til epd norge og prøv å koble den til appen min
-* flytt prosjekter til backenden og fiks all logikk for å få dette til å virke
-* lag logikk for å opprette 'resultat' fra prosjektets materialer
-* funksjonalitet for å endre og slette prosjekter og produkter
-
-
 ------------------------
 
 sprint2

@@ -3,8 +3,8 @@ import { createPinia } from 'pinia';
 import App from './App.vue';
 import router from './router';
 import PrimeVue from 'primevue/config';
+import 'primevue/resources/themes/aura-light-green/theme.css'
 import Toast from "vue-toastification";
-// Import the CSS or use your own!
 import "vue-toastification/dist/index.css";
 
 const toastOptions = {
@@ -25,6 +25,10 @@ const toastOptions = {
     rtl: false
   };
 
+const primeOptions = {
+  unstyled: true
+}
+
 import './assets/layout.css';
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -34,7 +38,7 @@ const app = createApp(App);
 const pinia = createPinia();
 app.use(pinia);
 app.use(router);
-app.use(PrimeVue);
+app.use(PrimeVue, primeOptions);
 app.use(Toast, toastOptions);
 
 app.mount('#app')

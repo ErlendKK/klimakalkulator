@@ -7,11 +7,21 @@
       <div v-if="isLoggedInComputed">
 
         <button type="button" class="btn btn-primary" @click="toggleAddModal">Nytt Prosjekt</button>
-        <project-modal
-            :is-active="isModalActive"
-            @close="isModalActive = false"
+        <project-add-modal
+            :is-active="isAddModalActive"
+            @close="isAddModalActive = false"
             @submit-project="handleAddProject">
-          </project-modal>
+        </project-add-modal>
+
+        <!-- Open productUpdateModal to add new product to the project -->
+        <!-- Uses v-if to trigger mounted() everytime its activated -->
+        <project-update-modal
+          v-if="isUpdateModalActive"
+          :is-active="isUpdateModalActive"
+          :projectToBeUpdated="projectToBeUpdated"
+          @close="isUpdateModalActive = false"
+          @submit-project="handleUpdateModalSubmit">
+        </project-update-modal>
         
           <div class="form-check form-switch">
             <input 
@@ -59,17 +69,20 @@
                     <i class="fa-solid fa-ellipsis"></i>
                   </a>
                   <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                    <li><a class="dropdown-item" href="#" @click="editButtonHandler(project)">Rediger</a></li>
+                    <li><a class="dropdown-item" href="#" @click="copyButtonHandler(project)">Lag kopi</a></li>
                     <template v-if="project.active">
                       <li><a class="dropdown-item" href="#" @click="toggleActive(project)">Arkiver</a></li>
                     </template>
                     <template v-else>
                       <li><a class="dropdown-item" href="#" @click="toggleActive(project)">Aktiver</a></li>
                     </template>
-                    <li><a class="dropdown-item" href="#" @click="editButtonHandler(project)">Rediger</a></li>
-                    <li><a class="dropdown-item" href="#" @click="copyButtonHandler(project)">Kopier</a></li>
+                    <div class="dropdown-divider"></div>
+                    <li><a class="dropdown-item" href="#" @click="deleteButtonHandler(project)">Slett</a></li>
                   </ul>
                 </div>
               </td>
+
             </tr>
           </tbody>
         </table>
@@ -86,10 +99,11 @@
 <script>
   import NavFooter from '../components/NavFooter.vue';
   import NavHeader from '../components/NavHeader.vue';
-  import ProjectModal from '../components/ProjectModal.vue';
+  import ProjectAddModal from '../components/ProjectAddModal.vue';
+  import ProjectUpdateModal from '../components/ProjectUpdateModal.vue';
   import cloneDeep from 'lodash/cloneDeep';
-  import { useToast } from "vue-toastification";
-  import { postData, updateData } from '../utils/http-requests'
+  import { displaySuccessToast, displayErrorToast, displayWarningToast } from '../utils/toasts.js'
+  import { postData, updateData, deleteData } from '../utils/http-requests'
   import { saveToLocalStorage, getFromLocalStorage } from '../utils/local-storage.js'
   import { useAuthStore } from '../stores/authStore';
   import { computed } from 'vue';
@@ -99,7 +113,8 @@
       components: {
         NavHeader,
         NavFooter,
-        ProjectModal
+        ProjectAddModal,
+        ProjectUpdateModal
       },
       setup() {
       const authStore = useAuthStore();
@@ -109,23 +124,10 @@
       const projectList = computed(() => authStore.projects);
       const setCurrentProject = authStore.setCurrentProject;
       const pushToProjects = authStore.pushToProjects;
-      const toast = useToast();
-
-      function displaySuccessToast(message="Suksess!") {
-        toast.success(message);
-      }
-
-      function displayErrorToast(message="Error!") {
-        toast.error(message);
-      }
-
-      function displayWarningToast(message="Obs!") {
-        toast.warning(message);
-      }
+      const popFromProjects = authStore.popFromProjects;
 
       return { isLoggedInComputed, userComputed, projectList, 
-        setCurrentProject, pushToProjects, displaySuccessToast, 
-        displayErrorToast, displayWarningToast 
+        setCurrentProject, pushToProjects, popFromProjects
       };
     },
     data() {
@@ -141,12 +143,19 @@
         displayArchived: false,
         currentSort: '',  // entry.body
         sortAscending: true,
-        isModalActive: false
+        isAddModalActive: false,
+        isUpdateModalActive: false,
+        projectToBeUpdated: null
       };
     },
     methods: {
       toggleAddModal() {
-        this.isModalActive = !this.isModalActive;
+        console.log(`toggleAddModal called`); // For testing
+        this.isAddModalActive = !this.isAddModalActive;
+      },
+      toggleUpdateModal() {
+        console.log(`toggleUpdateModal called`); // For testing
+        this.isUpdateModalActive = !this.isUpdateModalActive;
       },
       // Update sortAscending and currentSort with the selected entry
       // Save both to local storage
@@ -166,16 +175,36 @@
 
         if (db_response.status === 'failed') {
           const message = db_response?.message ?? 'Prosjektet kunne ikke oppdateres';
-          this.displayErrorToast(message);
+          displayErrorToast(message);
           return;
         }
         const message = project.active ? 'Prosjektet er aktivert' : 'Prosjektet er arkivert';
-        this.displaySuccessToast(message);
+        displaySuccessToast(message);
       },
+
       editButtonHandler(project) {
-        console.log('editButtonHandler called');
-        
+        console.log('Editing project:', project.name);
+        this.projectToBeUpdated = project;
+        console.log(this.projectToBeUpdated)
+        this.toggleUpdateModal();
       },
+
+      async deleteButtonHandler(project) {
+        console.log('deleteButtonHandler called');
+        const project_id = project.project_id
+        console.log(`${project.project_id}`)
+        const db_response = await deleteData(`/projects/delete/${project_id}`)
+        
+        if (db_response.status !== 'success') {
+          const message = db_response?.message ?? 'Prosjektet kunne ikke slettes!';
+          displayErrorToast(message);
+          return;
+        }
+
+        displaySuccessToast('Prosjektet er slettet!')
+        this.popFromProjects(project_id);
+      },
+
       copyButtonHandler(project){       
         const incrementName = (name) => {
           // Look for the pattern: "(" -> digits -> ")"
@@ -197,35 +226,56 @@
         copiedProject.name = incrementName(copiedProject.name);
         this.handleAddProject(copiedProject);
       },
+
       async handleAddProject(project) {
         project.user_id = this.userComputed.user_id;
         const db_response = await postData(project, '/register_project');
 
         if (db_response.status == "failed") {
-          const message = newProduct?.message ?? 'Registreringen av prosjektet mislyktes!';
-          this.displayErrorToast(message);
+          const message = db_response?.message ?? 'Registreringen av prosjektet mislyktes!';
+          displayErrorToast(message);
           return;
         }
 
         project.project_id = db_response.project_id;
         project.products = [];
         console.log(`handleAddProject SUCCESS for ${project.name}, ID: ${project.project_id}`);
-        this.displaySuccessToast('Prosjektet er registrert')
+        displaySuccessToast('Prosjektet er registrert')
 
         this.pushToProjects(project); 
-        this.isModalActive = false;
+        this.isAddModalActive = false;
       },
+
       async handleProjectSelection(project) {
         console.log('handleProjectSelection called for: ' + project.name);
         if (!project.active) {
-          this.displayErrorToast('Prosjektet er arkivert')
-          return;
+          displayErrorToast('Prosjektet er arkivert')
+          return; 
         }
 
         this.setCurrentProject(project);
         this.$router.push({ path: '/products' });
-      }
+      },
+
+      async handleUpdateModalSubmit(projectData) {
+        // Resets projectToBeUpdated for next time.
+        this.projectToBeUpdated = null;
+        console.log(projectData)
+        const db_response = await updateData(projectData, '/projects/update');
+
+        if (db_response.status === 'failed') {
+          const message = db_response?.message ?? 'Prsjektet kunne ikke oppdateres!';
+          displayErrorToast(message);
+          return;
+        }
+        
+        this.popFromProjects(projectData.project_id);
+        this.pushToProjects(projectData);
+        displaySuccessToast('Produktet er oppdatert')
+        this.isUpdateModalActive = false;
+      },
     },
+
     mounted() {
       console.log(this.projectList)
       const projectsPreferences = getFromLocalStorage('projectsPreferences');

@@ -76,7 +76,6 @@
             v-if="isLoggedInComputed">
             <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
               <li><a class="dropdown-item" href="#">Profil</a></li>
-              <li><a class="dropdown-item" href="#">Instillinger</a></li>
               <li><a class="dropdown-item" href="#" @click="logOut">Logg ut</a></li>
             </ul>
           </template>

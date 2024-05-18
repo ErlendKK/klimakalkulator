@@ -11,14 +11,7 @@ export const useAuthStore = defineStore('auth', {
     currentProject: null
   }),
   actions: {
-    async logIn(payload) {
-      console.log(payload);
-      const user = await postData(payload, '/login');
-
-      if (user.status != 'success') {
-        console.log('login failed');
-        return false;
-      }
+    logIn(user) {
       console.log(user);
       this.isLoggedIn = true;
       this.user = user;
@@ -52,7 +45,7 @@ export const useAuthStore = defineStore('auth', {
     },
     setCurrentProject(project) {
       this.currentProject = project;
-      console.log('setCurrentProject: ', this.currentProject.name)
+      console.log('setCurrentProject: ', this.currentProject.name);
       console.log(this.currentProject)
     },
     pushToProjects(project) {
@@ -62,8 +55,16 @@ export const useAuthStore = defineStore('auth', {
       this.currentProject.products.push(product);
     },
     popFromProducts(product_id) {
-      console.log(`popFromProducts called for id: ${product_id}`)
-      this.currentProject.products = this.currentProject.products.filter(p => p.product_id !== product_id)
-    }
+      console.log(`popFromProducts called for id: ${product_id}`);
+      this.currentProject.products = this.currentProject.products.filter(p => p.product_id !== product_id);
+    },
+    popFromProjects(project_id) {
+      console.log(`popFromProjects called for id: ${project_id}`);
+      if (this.currentProject?.project_id === project_id) {
+        this.currentProject = null;
+      }
+
+      this.projects = this.projects.filter(p => p.project_id !== project_id);
+    },
   }
 });

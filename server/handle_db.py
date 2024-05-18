@@ -241,9 +241,9 @@ def add_product_data(product_details):
 
         # Construct and return the added product
         new_product = {
+            **product_details,
             'product_id': product_id,
             'status': 'success',
-            **product_details
         }
         print(f'add_product_data SUCCEEDED for: {product_details["name"]}')
 
@@ -289,6 +289,36 @@ def delete_product_data(product_id):
     finally:
         if conn:
             conn.close()
+
+def delete_project_data(project_id):
+    """Deletes any data in 'Projects' and 'Products' with a given project_id
+    Returns 'success' if any data was found; else returns 'failed'
+    """
+    print(f'delete_project_data called for {project_id}')
+    try:
+        conn = sqlite3.connect('userdata.db')
+        cur = conn.cursor()
+
+        cur.execute("DELETE FROM Projects WHERE project_id = ?", (project_id,))
+        project_rows_deleted = cur.rowcount
+        conn.commit()
+
+        if project_rows_deleted > 0:
+            print(f'Delete_project_data SUCCEEDED for project ID: {project_id}')
+            print(f'Deleted {project_rows_deleted} entries from Projects')
+            return {"status": "success"}
+        else:
+            print(f'Delete_project_data FAILED: No project found with ID {project_id}')
+            return {"status": "failed"}
+
+    except Exception as e:
+        print(f"Failed to connect to db or execute query: {e}")
+        return {"status": "failed"}
+
+    finally:
+        if conn:
+            conn.close()
+
 
 def update_product_data(product_details):
     try:

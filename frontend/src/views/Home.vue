@@ -28,7 +28,7 @@
         name: 'Home',
         components: {
           NavHeader,
-          NavFooter
+          NavFooter,
         },        
         setup() {
           const authStore = useAuthStore();
@@ -38,8 +38,17 @@
           return { isLoggedInComputed, userComputed };
         },
 
-      };
-
+        data() {
+          return {
+              selectedOption: null,
+              options: [
+                  { name: 'Option 1', value: 1 },
+                  { name: 'Option 2', value: 2 },
+                  { name: 'Option 3', value: 3 }
+              ]
+          };
+        }
+    };
   </script>
   
   <style scoped>
