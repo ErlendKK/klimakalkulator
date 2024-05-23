@@ -40,39 +40,35 @@
       <!-- Input form for produktnavn -->
       <div class="mb-3 row">
         <div class="col-md-6">
-          <div class="filter-container">
-            <label for="produktvalg-dropdown" class="form-label">Produkt</label>
-            <!-- <input type="text" placeholder="Søk.." id="filter-products" v-model="searchQuery"> -->
-          </div>
 
-          <select id="produktvalg-dropdown" class="form-control" 
+          <input type="text" placeholder="Produkt" class="form-control" v-model="searchQuery">
+          <select id="produktvalg-dropdown dropdown-toggle dropdown-toggle-split" class="form-control" 
             v-model="newProduct.product" 
             @change="fetchEmissionData(newProduct.product)" 
             required>
             <template v-if="ecoPortalStatus === 'success' && ecoPortalData.length">
-            <option disabled value="">Velg Produkt</option>
-            <!-- Only display products that match the search query -->
-            <option 
-              v-for="product in filteredProducts" :key="product.name" :value="product">
-              {{ product.displayedName }}
-            </option>
+              <option disabled value="">Velg Produkt</option>
+              <!-- Only display products that match the search query -->
+              <option 
+                v-for="product in filteredProducts" :key="product.uuid" :value="product">
+                {{ product.displayedName }}
+              </option>
             </template>
-          <template v-else>
-            <option  disabled>Laster Produktdata...</option>
-          </template>
+            <template v-else>
+              <option  disabled>Laster Produktdata...</option>
+            </template>
           </select>
         </div>
 
-
         <div class="col-md-6">
           <label for="materialtypevalg-dropdown" class="form-label">Material</label>
-              <select id="materialtypevalg-dropdown" class="form-control" v-model="newProduct.type" required>
-                  <option disabled value="">Velg Materialtype</option>
-                  <option v-for="materialtype in materialTyper" :key="materialtype" :value="materialtype">
-                    {{ materialtype }}
-                  </option>
-              </select>
-            </div>
+          <select id="materialtypevalg-dropdown" class="form-control" v-model="newProduct.type" required>
+              <option disabled value="">Velg Materialtype</option>
+              <option v-for="materialtype in materialTyper" :key="materialtype" :value="materialtype">
+                {{ materialtype }}
+              </option>
+          </select>
+        </div>
       </div>
 
       <div class="mb-3 row">
@@ -130,8 +126,9 @@
             </div>
         </div>
       
-      <div class="btn-group" role="group">
-        <button type="submit" class="btn btn-primary btn-sm">Legg til</button>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-md" style="min-width:5em" @click="handleClose">Avbryt</button>
+        <button type="submit" class="btn btn-primary btn-md" style="min-width:8em">Legg til</button>
       </div>
     </form>
     </ModalComponent>
@@ -197,11 +194,12 @@
         },
         filteredProducts() {
           if (this.searchQuery && this.ecoPortalData.length) {
-            return this.ecoPortalData.filter(product => 
+            const filteredProds = this.ecoPortalData.filter(product => 
               product.displayedName.toLowerCase().includes(this.searchQuery.toLowerCase())
             );
+            return filteredProds
           }
-          return this.ecoPortalData;
+          return this.ecoPortalData; 
         }
         
       },
@@ -220,15 +218,16 @@
           if (this.ecoPortalStatus === 'loading') return;
 
           this.ecoPortalStatus !== 'loading';
-          const productList = await getData('/products/full-productlist');
+          const db_response = await getData('/products/list');
           
-          if (productList.status === 'failed') {
+          if (db_response.status === 'failed') {
             this.ecoPortalStatus = 'failed';
             displayWarningToast('Lastingen av produktinformasjon mislyktes');
             return;
           }
 
           // Limit name length to avoid overflow
+          const productList = db_response.data
           productList.forEach(product => {
             product.displayedName = setDisplayedName(product, 45)
           });
@@ -286,11 +285,19 @@
     }
   }
 </script>
-<style>
-
-.filter-container {
+<style scoped>
+.custom-dropdown {
+    height: auto;
+    max-height: 300px;
+    overflow-x: hidden;
+}
+.product-select-container {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
+}
+.modal-btn {
+  width: 5em;
+  min-width: 20px;
 }
 
 </style>

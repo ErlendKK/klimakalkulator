@@ -169,8 +169,9 @@
             </div>
         </div>
         
-        <div class="btn-group" role="group">
-          <button type="submit" class="btn btn-primary btn-sm">Oppdater</button>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-md" style="min-width:5em" @click="handleClose">Avbryt</button>
+          <button type="submit" class="btn btn-primary btn-md" style="min-width:8em">Oppdater</button>
         </div>
       </form>
     </ModalComponent>
@@ -254,14 +255,15 @@
           if (this.ecoPortalStatus === 'loading') return;
 
           this.ecoPortalStatus = 'loading';
-          const productList = await getData('/products/full-productlist');
+          const db_response = await getData('/products/list');
           
-          if (productList.status === 'failed') {
+          if (db_response.status === 'failed') {
             this.ecoPortalStatus = 'failed';
             displayErrorToast('En feil oppstod ved lasting av produktdata')
             return;
           }
 
+          const productList = db_response.data;
           productList.forEach(product => {
             product.displayedName = setDisplayedName(product, 45);
             product['project_id'] = this.currentProjectId;

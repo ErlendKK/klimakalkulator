@@ -7,7 +7,7 @@
         <div v-if="isLoggedInComputed && currentProject">
 
           <!-- Open productModal to add new product to the project -->
-          <button type="button" class="btn btn-primary" 
+          <button type="button" class="btn btn-primary toggle-modal-button"
             @click="toggleAddModal">
             Nytt Produkt
           </button>
@@ -27,24 +27,39 @@
           </Product-update-modal>
     
           <!-- Table of products included in the project -->
-          <table class="table table-hover table-sm">
-            <thead>
+          <div class="table-responsive">
+          <table class="table table-sm table-hover" >
+            <thead class="table-light">
               <tr>
+                 <!-- For sortable columns, add  -->
                 <th v-for="entry in tableEntries" :key="entry">
-                  {{ entry.heading }}
                   <template  v-if="entry.sortable">
-                    <i
+                    <button type="button"
                       :class="{
-                        'fa-solid': true, 
-                        'fa-sort': entry.body !== currentSort, 
-                        'fa-sort-down': entry.body === currentSort && !sortAscending, 
-                        'fa-sort-up': entry.body === currentSort && sortAscending
+                        // 'border border-success border-opacity-75 sorted-header': entry.body === currentSort,
+                        'btn btn-default heading text-start': true
                       }"
                       @click="sortTable(entry)">
-                    </i>
+                      {{ entry.heading }}
+                      <i
+                        :class="{
+                          'fa-solid': true, 
+                          'fa-sort': entry.body !== currentSort, 
+                          'fa-sort-down': entry.body === currentSort && !sortAscending, 
+                          'fa-sort-up': entry.body === currentSort && sortAscending,
+                          'faded-icon': true 
+                        }">
+                      </i>
+                    </button>
+                  </template>
+                  <template  v-else>
+                    <button type="button" disabled class="btn btn-default border border-0 heading" style="padding-left: 0; font-weight: bold;">
+                    {{ entry.heading }}
+                    </button>
                   </template>
                 </th>
-                <th></th>
+                <!-- Empty heading for dropdown-menus -->
+                <th></th> 
               </tr>
             </thead>
             <tbody>
@@ -58,8 +73,8 @@
                 <td>{{ product.quantity }}</td>
                 <td readonly>{{ product.unit }}</td>
                 <td>
-                  <div class="dropdown">
-                    <a class="btn " href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
+                  <div class="dropdown"> 
+                    <a class="btn ellipsis-container" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
                       <i class="fa-solid fa-ellipsis"></i>
                     </a>
                     <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
@@ -73,6 +88,7 @@
               </tr>
             </tbody>
           </table>
+        </div>
         </div>
 
         <!-- TODO: Implement page when not logged in -->
@@ -272,7 +288,21 @@
 </script>
   
 <style scoped>
-  button {
+  .heading {
+    width: 100%;
+    padding: 0.1em;
+    padding-left: 0; 
+    font-weight: bold;
+  }
+  .faded-icon {
+    opacity: 0.6;
+  }
+  .toggle-modal-button {
     margin-bottom: 1.5em;
+  }
+  .ellipsis-container {
+    padding-top: 0.1em;
+    padding-bottom: 0.1em;
+    margin: 0;
   }
 </style>

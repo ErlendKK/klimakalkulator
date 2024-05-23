@@ -6,7 +6,7 @@
       <h2>Prosjektoversikt</h2>
       <div v-if="isLoggedInComputed">
 
-        <button type="button" class="btn btn-primary" @click="toggleAddModal">Nytt Prosjekt</button>
+        <button type="button" class="btn btn-primary toggle-modal-button" @click="toggleAddModal">Nytt Prosjekt</button>
         <project-add-modal
             :is-active="isAddModalActive"
             @close="isAddModalActive = false"
@@ -35,23 +35,37 @@
           </div>
 
         <!-- Table of projects -->
-        <table class="table table-hover table-sm">
-          <thead>
+        <div class="table-responsive">
+        <table class="table table-hover table-sm" >
+          <thead class="table-light">
             <tr>
               <th v-for="entry in tableEntries" :key="entry">
-                {{ entry.heading }}
-                <template v-if="entry.sortable">
-                  <i
-                    :class="{
-                      'fa-solid': true, 
-                      'fa-sort': entry.body !== currentSort, 
-                      'fa-sort-down': entry.body === currentSort && !sortAscending, 
-                      'fa-sort-up': entry.body === currentSort && sortAscending
-                    }"
-                    @click="sortTable(entry)">
-                  </i>
-                </template>
+                <template  v-if="entry.sortable">
+                    <button type="button"
+                      :class="{
+                        // 'border border-success border-opacity-75 sorted-header': entry.body === currentSort,
+                        'btn btn-default heading text-start': true
+                      }"
+                      @click="sortTable(entry)">
+                      {{ entry.heading }}
+                      <i
+                        :class="{
+                          'fa-solid': true, 
+                          'fa-sort': entry.body !== currentSort, 
+                          'fa-sort-down': entry.body === currentSort && !sortAscending, 
+                          'fa-sort-up': entry.body === currentSort && sortAscending,
+                          'faded-icon': true 
+                        }">
+                      </i>
+                    </button>
+                  </template>
+                  <template  v-else>
+                    <button type="button" disabled class="btn btn-default border border-0 heading" style="padding-left: 0; font-weight: bold;">
+                    {{ entry.heading }}
+                    </button>
+                  </template>
               </th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -65,7 +79,7 @@
 
               <td>
                 <div class="dropdown">
-                  <a class="btn " href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
+                  <a class="btn ellipsis-container" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="fa-solid fa-ellipsis"></i>
                   </a>
                   <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
@@ -86,6 +100,7 @@
             </tr>
           </tbody>
         </table>
+        </div>
       </div>
       <!-- TODO: Implement page when not logged in -->
       <div v-else>
@@ -102,7 +117,7 @@
   import ProjectAddModal from '../components/ProjectAddModal.vue';
   import ProjectUpdateModal from '../components/ProjectUpdateModal.vue';
   import cloneDeep from 'lodash/cloneDeep';
-  import { displaySuccessToast, displayErrorToast, displayWarningToast } from '../utils/toasts.js'
+  import { displaySuccessToast, displayErrorToast } from '../utils/toasts.js'
   import { postData, updateData, deleteData } from '../utils/http-requests'
   import { saveToLocalStorage, getFromLocalStorage } from '../utils/local-storage.js'
   import { useAuthStore } from '../stores/authStore';
@@ -160,7 +175,6 @@
       // Update sortAscending and currentSort with the selected entry
       // Save both to local storage
       sortTable(entry) {
-        console.log(entry)
         this.sortAscending = this.currentSort === entry.body ? !this.sortAscending : false;
         this.currentSort = entry.body;
 
@@ -229,7 +243,8 @@
 
       async handleAddProject(project) {
         project.user_id = this.userComputed.user_id;
-        const db_response = await postData(project, '/register_project');
+        console.log(project);
+        const db_response = await postData(project, '/projects/register');
 
         if (db_response.status == "failed") {
           const message = db_response?.message ?? 'Registreringen av prosjektet mislyktes!';
@@ -246,20 +261,7 @@
         this.isAddModalActive = false;
       },
 
-      async handleProjectSelection(project) {
-        console.log('handleProjectSelection called for: ' + project.name);
-        if (!project.active) {
-          displayErrorToast('Prosjektet er arkivert')
-          return; 
-        }
-
-        this.setCurrentProject(project);
-        this.$router.push({ path: '/products' });
-      },
-
       async handleUpdateModalSubmit(projectData) {
-        // Resets projectToBeUpdated for next time.
-        this.projectToBeUpdated = null;
         console.log(projectData)
         const db_response = await updateData(projectData, '/projects/update');
 
@@ -269,10 +271,23 @@
           return;
         }
         
+        this.projectToBeUpdated = null; // Resets modal
         this.popFromProjects(projectData.project_id);
         this.pushToProjects(projectData);
-        displaySuccessToast('Produktet er oppdatert')
+        displaySuccessToast('Produktet er oppdatert');
         this.isUpdateModalActive = false;
+      },
+
+      
+      async handleProjectSelection(project) {
+        console.log('handleProjectSelection called for: ' + project.name);
+        if (!project.active) {
+          displayErrorToast('Prosjektet er arkivert')
+          return; 
+        }
+
+        this.setCurrentProject(project);
+        this.$router.push({ path: '/products' });
       },
     },
 
@@ -286,7 +301,8 @@
     computed: {
       sortedProjects() {
         // filter list by property 'active', and declare variables coding for sort-direction and data-type
-        const localProjectList = this.displayArchived ? this.projectList : this.projectList.filter(p => p.active);
+        const activeProjects = this.projectList?.filter(p => p.active) ?? [];
+        const localProjectList = this.displayArchived ? this.projectList : activeProjects;
         const modifier = this.sortAscending ? -1 : 1;
         const dateEntries = ['created_date', 'updated_date']
         const sortByDate = dateEntries.includes(this.currentSort) ? true : false;
@@ -317,9 +333,18 @@
 </script>
 
 <style scoped>
-    button {
-        margin-bottom: 1.5em;
+    .heading {
+        width: 100%;
+        padding: 0.1em;
+        padding-left: 0; 
+        font-weight: bold;
+      }
+    .faded-icon {
+      opacity: 0.6;
     }
+    .toggle-modal-button {
+    margin-bottom: 1.5em;
+  }
     td {
       cursor: pointer;
     }
@@ -327,4 +352,9 @@
       color: rgb(145, 143, 143);
       font-style: italic;
     }
+    .ellipsis-container {
+    padding-top: 0.1em;
+    padding-bottom: 0.1em;
+    margin: 0;
+  }
 </style>

@@ -119,9 +119,6 @@
     align-items: center;
     justify-content: center;
   }
-  button {
-        margin-right: 0.5em;
-  }
   .modal-header {
       display: flex;
       justify-content: space-between;

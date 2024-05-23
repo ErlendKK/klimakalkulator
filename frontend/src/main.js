@@ -5,7 +5,7 @@ import router from './router';
 import Toast from "vue-toastification";
 import { toastOptions } from './utils/toasts.js'
 import "vue-toastification/dist/index.css";
-import './src/assets/layout.css';
+import './assets/layout.css';
 
 import './assets/layout.css';
 import 'bootstrap/dist/css/bootstrap.css';

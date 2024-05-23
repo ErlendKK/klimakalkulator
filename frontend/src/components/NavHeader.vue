@@ -7,7 +7,7 @@
         <img class="logo" src="/favicon.ico" width="40" height="40">
       </router-link>
       <router-link class="navbar-brand router" to="/">
-        <h1>Klimakalkulatoren</h1>
+        <h1>Klimakalkulator</h1>
       </router-link>
     </div>
 

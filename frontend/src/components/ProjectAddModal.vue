@@ -12,6 +12,7 @@
                 id="prosjektnavn-input" 
                 v-model="newProject.name" 
                 placeholder="Oppgi Prosjektnavn"
+                maxlength="100"
                 required>
             </div>
             <!-- Input form for addresse -->
@@ -23,6 +24,7 @@
                 id="prosjektaddress-input" 
                 v-model="newProject.address" 
                 placeholder="Oppgi Addresse"
+                maxlength="100"
                 required>
             </div>
           </div>
@@ -37,6 +39,7 @@
                 id="prosjektbta-input" 
                 v-model="newProject.bta" 
                 placeholder="Oppgi BTA"
+                maxlength="100"
                 min="1"
                 required>
             </div>
@@ -65,6 +68,8 @@
                 id="prosjektstart-input" 
                 v-model="newProject.prosjektstart" 
                 min="2000"
+                maxlength="100"
+                pattern="^\d+$"
                 required>
             </div>
             <!-- Input form for Analyseperiode -->
@@ -76,12 +81,14 @@
                 id="analyseperiode-input" 
                 v-model="newProject.analyseperiode" 
                 min="1"
+                maxlength="100"
                 required>
             </div>
           </div>
           
-          <div class="btn-group" role="group">
-            <button type="submit" class="btn btn-primary btn-sm">Legg til</button>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary btn-md" style="min-width:5em" @click="handleClose">Avbryt</button>
+            <button type="submit" class="btn btn-primary btn-md" style="min-width:8em">Opprett</button>
           </div>
         </form>
       </ModalComponent>
@@ -92,6 +99,7 @@
     import { klimagassreferanser } from '../utils/breeam.js'
     import { getTodaysDate } from '../utils/misc.js'
     import ModalComponent from './ModalComponent.vue';
+    import { displayWarningToast } from '../utils/toasts.js'
 
     export default {
         name: 'ProjectUpdateModal',

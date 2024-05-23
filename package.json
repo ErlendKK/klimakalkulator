@@ -4,10 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev-back": "cd server && python create_db.py && python app.py",
     "reset": "cd server && python reset_db.py",
+    "dev-back": "cd server && python create_db.py && python app.py",
+    "prod-back": "cd server && python create_db.py && python app.py built",
     "test-db": "cd server && python handle_db.py",
     "dev-front": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
     "setup": "npm install && cd server && pip install -r requirements.txt && cd ../frontend && npm install && cd ..",
     "push": "git add . && git commit -m \"Update changes\" && git push origin main"
   },

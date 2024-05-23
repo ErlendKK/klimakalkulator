@@ -4,7 +4,7 @@
   
       <!-- TODO: Implement Main page for logged in/ not logged in -->
       <main class="container">
-        <img src="../assets/stockphoto.png" loading="lazy"/>
+        <img src="../assets/stockphoto.jpg" loading="lazy"/>
         <h1>Velkommen til Klimakalkulatoren</h1>
         <p>text</p>
         <p>text</p>

@@ -1,7 +1,6 @@
 import sqlite3
+from flask import session
 from werkzeug.security import generate_password_hash, check_password_hash
-from werkzeug.utils import secure_filename
-import os
 
 # Establish connection to db
 def get_db_connection():
@@ -10,7 +9,7 @@ def get_db_connection():
     return conn
 
 
-def add_userdata_to_db(data):
+def add_user_to_db(data):
     """" Accepts a dict containing name, email, password and 'photo_filename'
     Generates a password hash
     Posts values (name, email, password_hash, photo_filename) to Users 
@@ -29,8 +28,8 @@ def add_userdata_to_db(data):
         # Check if email already exists
         cur.execute("SELECT email FROM Users WHERE email = ?", (email,))
         if cur.fetchone(): # retrieves one datapoint if found; else None
-            print(f'add_userdata_to_db FAILED for: {data["name"]}: "Email already registered.')
-            return {"status": "failed", "message": "En bruker er allerede registrert med denne epostadressen."}
+            print(f'add_user_to_db FAILED for: {data["name"]}: "Email already registered.')
+            return {"status": "failed", "message": "Eposten er allerede i bruk."}
 
         # If not; add the user
         cur.execute("""
@@ -40,12 +39,13 @@ def add_userdata_to_db(data):
         conn.commit()
 
         data["user_id"] = cur.lastrowid
-        print(f'add_userdata_to_db SUCCEEDED for: {data["name"]}')
-        return {"status": "success", "user_data": data }
+        data["projects"] = []
+        message = f'add_user_to_db SUCCEEDED for: {data["name"]}'
+        return {"status": "success", 'message': message, "user_data": data }
 
     except Exception as e:
-        print(f'add_userdata_to_db FAILED for: {data["name"]}. Error: {e}')
-        return {"status": 'failed', "message": "Vi har for tiden probelmer med systemet vårt. Venligst prøv igjen senere"}
+        print(f'add_user_to_db FAILED for: {data["name"]}. Error: {e}')
+        return {"status": 'failed', "message": "Vi har for tiden probelemer med systemet vårt. Venligst prøv igjen senere"}
     
     finally:
         if conn:
@@ -55,7 +55,7 @@ def add_userdata_to_db(data):
 def get_userdata_from_db(col, value):
     """" col: the attribute searched (e.g. 'email')
     value: the value searched for (e.g. a.a@a)
-    returns one user-datapoint (name, email, password_hash, photo_filename); or None, 
+    returns user-data (name, email, password_hash, photo_filename); or None, 
     """
     try:
         conn = get_db_connection()
@@ -69,6 +69,7 @@ def get_userdata_from_db(col, value):
         
         user = dict(user)
         user['status'] = 'success'
+        user['message'] = 'get_userdata_from_db SUCCEEDED'
         return user
         
     except Exception as e:
@@ -81,30 +82,30 @@ def get_userdata_from_db(col, value):
 
 
 def validate_and_return_user_data(data):
-    """input argument data (email, password, )
-    returns (name, email, photo_filename, and project_list) if found; else None, 
+    """Args: data (dict) containing (email, password)
+    Calls get_userdata_from_db, which returns (name, email, password_hash, photo_filename) if found; else None, 
+    Returns (name, email, photo_filename, and project_list) if found; else None, 
     """    
     email = data['email']
     password = data['password']
-    # get_userdata_from_db returns (name, email, password_hash, photo_filename) if found; else None, 
+    
     user = get_userdata_from_db('email', email)
     print(user)
 
     if user["status"] == "failed":
-        print('validate_and_return_user_data failed to get the user')
         return user
    
     if not check_password_hash(user['password_hash'], password):
         return {'status': "failed", "message": "Incorrect password"}
     
     user_data = {k:v for k, v in user.items() if k != 'password_hash'}
-    user_data['projects'] = get_project_data(user_data['user_id'])
+    user_data['projects'] = get_project_data_from_db(user_data['user_id'])
     user_data['status'] = 'success'
 
     return user_data
 
 
-def get_project_data(user_id):
+def get_project_data_from_db(user_id):
     try:
         conn = sqlite3.connect('userdata.db')
         conn.row_factory = sqlite3.Row
@@ -154,10 +155,9 @@ def get_product_data(project, conn):
 
     finally:
         cur.close()
-    
-    
+       
 
-def post_project_to_db(data):
+def add_project_to_db(data):
     user_id = data['user_id']
     name = data['name']
     type = data['type']
@@ -171,7 +171,7 @@ def post_project_to_db(data):
 
     user_data = get_userdata_from_db('user_id', user_id)
     if user_data["status"] == "failed":
-        print(f'post_project_to_db FAILED for: {data["name"]}. User_id not found')
+        print(f'add_project_to_db FAILED for: {data["name"]}. User_id not found')
         return {"status": "failed"}
     
     user_id = user_data["user_id"]
@@ -187,11 +187,11 @@ def post_project_to_db(data):
         """, (user_id, name, type, bta, prosjektstart, analyseperiode, address, created_date, updated_date, active))
         conn.commit()
 
-        print(f'post_project_to_db SUCCEEDED for: {data["name"]}')
+        print(f'add_project_to_db SUCCEEDED for: {data["name"]}')
         return {'project_id': cur.lastrowid, "status": "success"}
 
     except Exception as e:
-        print(f'post_project_to_db FAILED for: {data["name"]}. Error: {e}')
+        print(f'add_project_to_db FAILED for: {data["name"]}. Error: {e}')
         return {"status": 'failed', "message": f"DB Error: {e}"}
     
     finally:
@@ -199,7 +199,7 @@ def post_project_to_db(data):
             conn.close()
 
 
-def add_product_data(product_details):
+def add_product_to_db(product_details):
     try:
         conn = sqlite3.connect('userdata.db')
         conn.row_factory = sqlite3.Row
@@ -245,7 +245,7 @@ def add_product_data(product_details):
             'product_id': product_id,
             'status': 'success',
         }
-        print(f'add_product_data SUCCEEDED for: {product_details["name"]}')
+        print(f'add_product_to_db SUCCEEDED for: {product_details["name"]}')
 
         return new_product
 
@@ -259,36 +259,58 @@ def add_product_data(product_details):
         
 
 def delete_product_data(product_id):
-    """
-    For a given product_id:
+    """For a given product_id:
     Deletes any data in 'EmissionFactors' and 'Products' with that product_id
-    Returns 'success' if any data was found; else returns 'failed'
+    Returns 'success' if any data was found and user has rights; else returns 'failed'
     """
     try:
         conn = sqlite3.connect('userdata.db')
         cur = conn.cursor()
 
+        #  Delete product from both Products and EmissionFactors
         cur.execute("DELETE FROM EmissionFactors WHERE product_id = ?", (product_id,))
-        emission_rows_deleted = cur.rowcount
         cur.execute("DELETE FROM Products WHERE product_id = ?", (product_id,))
-        product_rows_deleted = cur.rowcount
         conn.commit()
 
-        if product_rows_deleted > 0:
-            print(f'Delete_product_data SUCCEEDED for product ID: {product_id}')
-            print(f'Deleted {product_rows_deleted} entries from Products, and {emission_rows_deleted} entries from EmissionFactors')
-            return {"status": "success"}
+        # Check if deletions were successful
+        if cur.rowcount > 0:
+            message = f'Delete_product_data SUCCEEDED for product ID: {product_id}'
+            return {"status": "success", "message": message}
         else:
-            print(f'Delete_product_data FAILED: No product found with ID {product_id}')
-            return {"status": "failed"}
+            message = f'Delete_product_data FAILED: No product found with ID {product_id}'
+            return {"status": "success", "message": message}
 
     except Exception as e:
-        print(f"Failed to connect to db or execute query: {e}")
-        return {"status": "failed"}
+        message = f"Failed to connect to db or execute query: {e}"
+        return {"status": "success", "message": message}
 
     finally:
         if conn:
             conn.close()
+
+def validate_product_for_update(product_id):
+    try:
+        conn = sqlite3.connect('userdata.db')
+        cur = conn.cursor()
+
+        # Validate that the product belongs to a projects belonging to the user in session
+        cur.execute("SELECT * FROM Products WHERE product_id = ?", (product_id,))
+        product = cur.rowcount
+        if product is None:
+            return {"status": "failed", "message": "No product found with given ID", "code": 400}
+
+        project_id = product[0]
+        if project_id not in session.get('project_ids', []):
+            return {"status": "failed", "message": "User lacks the rights to delete this product", "code": 401}
+        
+    except Exception as e:
+        message = f"Failed to connect to db or execute query: {e}"
+        return {"status": "success", "message": message, "code": 404}
+
+    finally:
+        if conn:
+            conn.close()
+
 
 def delete_project_data(project_id):
     """Deletes any data in 'Projects' and 'Products' with a given project_id
@@ -559,13 +581,13 @@ products = [
 
 if __name__ == '__main__':
     for user in users:
-        add_userdata_to_db(user)
+        add_user_to_db(user)
 
     for project in projects:
-        post_project_to_db(project)
+        add_project_to_db(project)
     
     for product in products:
-        add_product_data(product)
+        add_product_to_db(product)
 
 
 

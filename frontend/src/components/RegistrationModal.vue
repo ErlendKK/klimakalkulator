@@ -11,7 +11,7 @@
               id="navn-input" 
               v-model="newUser.name" 
               placeholder="Oppgi Navn"
-              pattern="[A-Za-zæøåÆØÅ ]+"
+              pattern="[A-Za-zæøåÆØÅ '-]+"
               title="Navnet kan bare inneholde bokstaver og mellomrom">
           </div>
 
@@ -145,20 +145,23 @@
                 formData.append('name', this.newUser.name);
                 formData.append('email', this.newUser.email);
                 formData.append('password', this.newUser.password);
+                formData.append('stayLoggedIn', this.newUser.stayLoggedIn);
+                
                 if (this.newUser.photo && this.validatePhoto(this.newUser.photo)) {
                     formData.append('photo', this.newUser.photo, this.newUser.photo.name);
                 }
 
-                const data = await postForm(formData, '/users');
-                if (data.status == 'success') {
-                  // TODO: handle logIn call backend to avoid this extra http-request, return userdata
+                const db_response = await postForm(formData, '/users/register');
+                if (db_response.status == 'success') {
+                  this.newUser = db_response.user_data;
+                  console.log('this.newUser')
+                  console.log(this.newUser)
                   displaySuccessToast(`Velkommen ${this.newUser.name}`);
                   this.logIn(this.newUser);
                   this.handleClose('close')
-                }
 
-                else {
-                  const errorMessage = data.message ?? "En feil har oppstått";
+                } else {
+                  const errorMessage = db_response.message ?? "En feil har oppstått";
                   displayErrorToast(errorMessage);
                   return;
                 }
@@ -199,9 +202,6 @@
 </script>
 
 <style>
-    button {
-        margin-right: 0.5em;
-    }
     .image-upload {
         margin-top: 2.5em;
     }

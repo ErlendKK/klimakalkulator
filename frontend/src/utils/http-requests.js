@@ -37,7 +37,7 @@ async function postData(payload, path) {
         if (!response.ok) {
             throw new Error('response not ok')
         }
-        
+
         const responseBody = await response.json();
         console.log(responseBody);
         return responseBody;
@@ -49,23 +49,26 @@ async function postData(payload, path) {
 }
 
 async function postForm(payload, path) {
+    let responseBody;
     try {
         const response = await fetch(BASE_URL + path, {
             method: 'POST',
             credentials: 'include',
             body: payload,
         });
-        if (!response.ok) {
-            throw new Error('response not ok')
-        }
 
-        const responseBody = await response.json();
+        responseBody = await response.json();
+
+        if (!response.ok) {
+            throw new Error(`HTTP error ${response.status}: ${responseBody.message || 'unknown error'}`);
+        }
+        
         console.log(responseBody);
         return responseBody;
 
     } catch(err) {
-        console.log('error: ' + err);
-        return {status: "failed"};
+        console.log('error: ' + err.message);
+        return responseBody ?? {status: "failed"};
     }
 }
 
