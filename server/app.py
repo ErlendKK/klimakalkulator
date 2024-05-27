@@ -1,17 +1,16 @@
 from flask import Flask, session, jsonify, request, send_from_directory
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
+import uuid
+import os
+import sys
+import re
+from handle_ecoportal import fetch_emission_factors, fetch_productlist
 from handle_db import (
     add_user_to_db, get_userdata_from_db, validate_and_return_user_data, 
     add_project_to_db, get_project_data_from_db, delete_project_data, update_project_data,
     add_product_to_db, delete_product_data, update_product_data, validate_product_for_update
 )
-from handle_ecoportal import fetch_emission_factors, fetch_productlist
-import uuid
-import os
-import sys
-import re
-
 
 SERVER_URL = "http://localhost:5000"
 VUE_DEV_SERVER = ["http://localhost:5173"]
@@ -130,7 +129,9 @@ def validate_user_registration(user_data):
 
 
 def validate_file(file):
-    # Validate format and filesize (5Mb)
+    """Validate format and filesize (5Mb)
+    returns True if the file is valid, or False otherwise
+    """
     filename = file.filename
     file_format_allowed = '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
     file_size_allowed = file.content_length <= 5 * 1024 * 1024
@@ -139,6 +140,13 @@ def validate_file(file):
 
 
 def rename_and_store_photo(photo):
+    """
+    Processes, renames and stores the input photo in the directory UPLOAD_FOLDER.
+    Args: photo: A Flask `FileStorage` object containing the uploaded photo.
+    Ensures unique filenames by attaching unique identifiers to the input filename, 
+    Saves the photo in UPLOAD_FOLDER. 
+    If successful; returns a string with the new filename. Otherwise; returns None.
+    """
     try:
         original_filename = secure_filename(photo.filename)
         unique_id = uuid.uuid4().hex
@@ -155,10 +163,10 @@ def rename_and_store_photo(photo):
 
 @app.route('/login', methods=['POST'])
 def login_user():
-    """Valid requests include email and password in json-format
-    Validates email/password combination
-    Starts a new session
-    Returns name, email, photo_filename, project_list, and photo-url
+    """Valid request-bodies contains email and password in json-format
+    Validates email/password combination. If valid; starts a new session
+    If successfull; Returns user_data (name, email, photo_filename, project_list, and photo-url)
+    Otherwise; returns an error message
     """
     login_data = request.get_json()
     user_data = validate_and_return_user_data(login_data) # returns (name, email, photo_filename, and project_list)
@@ -173,6 +181,10 @@ def login_user():
 
 
 def establish_session(user_data):
+    """Logs in a user by establishing a user session
+    Args: user_data; contains user_id, projects, stayLoggedIn and optional photo_name
+    Clears any existing user_data in session
+    """
     session.clear()
     user_data['photo_url'] = get_photo_URL(user_data)
     session['user_id'] = user_data['user_id']
@@ -192,16 +204,20 @@ def logout():
 
 @app.route('/session', methods=['GET'])
 def check_session():
+    """Checks if a user is in session
+    If so, retrieves all userdata from the database and returns it (except password hash)
+    Otherwise; returns a message saying that there is no user in session.
+    """
     user_id = session.get('user_id')
     print(f'check_session called for user_id: {user_id}')
     stay_logged_in = session.get('stay_logged_in')
 
     if user_id is None or not stay_logged_in:
-        return jsonify({'status': 'failure', 'message': 'session not found'})
+        return jsonify({'status': 'failed', 'message': 'Bruker er ikke i session'})
     
     user = get_userdata_from_db('user_id', user_id)
     if not user:
-        return jsonify({'status': 'failure', 'message': 'user not found'}), 404
+        return jsonify({'status': 'failed', 'message': 'Brukeren er ikke funnet'}), 404
     
     user_data = {k:v for k, v in user.items() if k != 'password_hash'}
     user_data['projects'] = get_project_data_from_db(user_id)
@@ -210,6 +226,10 @@ def check_session():
 
 
 def get_photo_URL(user_data):
+    """Retrieves the path to the users profile picture
+    Args: user_data: must contain photo_filename
+    If successfull; returns a string with the path to the photo. Otherwise; returns None.
+    """
     photo_filename = user_data['photo_filename']
     return f"{SERVER_URL}/user_data/{photo_filename}" if photo_filename else None
 
@@ -221,10 +241,10 @@ def get_photo_URL(user_data):
 
 @app.route('/projects/register', methods=['POST'])
 def register_project():
-    """Registers a new project. Requires a logged-in user.
-    Params: data: dict of project data
-    If successful, returns a jsonified dict of the input data
-    with added properties for project_id, status and message
+    """Registers a new project by adding it to the database table Projects.
+    Args: project_data: contains {'name': String, 'type': String, 'bta': Integer, 'analyseperiode': Integer, 'prosjektstart': Integer, 
+    'address': String, 'created_date': String(dd.mm.yyyy), 'updated_date': String(dd.mm.yyyy), 'active': Boolean, 'user_id': Integer}
+    If successful; returns updated project_data which includes a new project_id. Oterwise; returns an error-message.
     """
     project_data = request.get_json()
     print(project_data)
@@ -251,9 +271,13 @@ def register_project():
 
 
 def authenticate_user(data):
-    """Validate that the user is logged in and correct"""
+    """Validates that the user is logged in (is in session)
+    Args; data: a dict of userdata which includes the user_id to be checked.
+    If so; returns True. Otherwise returns False
+    """
     if not data['user_id']:
         return {"status": "failed", "message": "En feil har oppstått"}
+    
     if data['user_id'] != session['user_id']:
         message = 'Prosjekteier er ikke logget inn, eller mangler rettigheter til å oppdatere prosjektet'
         return {'status': 'failed', 'message': message}
@@ -262,12 +286,12 @@ def authenticate_user(data):
 
 
 def validate_project_data(data):
-    """Validates the format, datatype and length of the mandatory fields for project registration.
-    Props: data: dict of project_data passed as body in http-request
+    """Validates the format, datatype and length of the mandatory inputs.
+    Args: project_data: contains {'name': String, 'type': String, 'bta': Integer, 'analyseperiode': Integer, 'prosjektstart': Integer, 
+    'address': String, 'created_date': String(dd.mm.yyyy), 'updated_date': String(dd.mm.yyyy), 'active': Boolean, 'user_id': Integer}
     Returns: dict containing validation-status and message
     """
-    
-    # Field validations with pattern matching and length checks
+    # Valid data formats
     patterns = {
         'name': r"^.*$",
         'address': r"^.*$",
@@ -278,6 +302,7 @@ def validate_project_data(data):
 
     for key, pattern in patterns.items():
         value = data.get(key) 
+        # convert numbers to string for the regex comparisons
         if isinstance(value, int):
             value = str(value)
             
@@ -292,6 +317,13 @@ def validate_project_data(data):
 
 @app.route('/projects/update', methods=['PUT'])
 def update_project():
+    """
+    Updates project_data in the database table Projects
+    Args: project_data: contains {'user_id': Integer, 'project_id': Integer, 'name': String, 'type': String, 'bta': Integer, 'analyseperiode': Integer, 
+    'prosjektstart': Integer, 'products': List, address': String, 'created_date': String(dd.mm.yyyy), 'updated_date': String(dd.mm.yyyy), 'active': Boolean}
+    Authenticates the user by verifying that the user_id is in session, and validates the content and format of the input data.
+    If successful; updates the project data and returns the updated data. Otherwise; returns an error message.
+    """
     project_data = request.get_json()
     print(project_data)
 
@@ -316,7 +348,13 @@ def update_project():
 
 @app.route('/projects/delete/<project_id>', methods=['DELETE'])
 def delete_project(project_id):
-    # Convert id to string as expected by the called functions
+    """Deletes the project data from the database table Projects and from session.
+    Args: project_id: stringified integer
+    Authenticates the user by verifying that the project_id is in session
+    If successful; deletes the project from the database and the project_id from session and returns a success message. 
+    Otherwise; returns an error message.
+    """
+    # Convert project_id to int, to fit the expectation of delete_project_data()
     try:
         project_id = int(project_id)
     except ValueError:
@@ -345,14 +383,18 @@ def delete_project(project_id):
 
 @app.route('/products/add', methods=['POST'])
 def add_product_to_project():
-    """Takes as input a json containing 'project_id' and product data from the ecoportal product-list
-    Returns a json containing "emission_factors" (dict of floats) and unit (string)
+    """Adds a product to the database table Products.
+    Args: data containing 'project_id' and product data from the ecoportal product-list
+    Authenticates the user be checking that the user_id is in session.
+    If successfull; returns an updated version of data which includes "emission_factors" (dict of floats) and unit (string)
+    Otherwise; returns an error message
     """
     data = request.get_json()
     print(data)
 
     if data['project_id'] not in session['project_ids']:
-        return jsonify({'status': 'failed', 'message': 'Prosjekeieren er ikke logget inn'}), 401
+        print('add_product_to_project: Prosjekteieren er ikke logget inn')
+        return jsonify({'status': 'failed', 'message': 'Prosjekteieren er ikke logget inn'}), 401
 
     added_product = add_product_to_db(data)
     added_product['emission_factors'] = data.get('emission_factors', {})
@@ -366,16 +408,21 @@ def add_product_to_project():
 
 @app.route('/products/delete/<product_id>', methods=['DELETE'])
 def delete_product(product_id):
+    """Deletes a product from the database table Products.
+    Args: 'product_id' (Integer)
+    Authenticates the user be checking that the project_id associated with this product_id is in session.
+    If successfull; returns deletes the product from the database. Otherwise; returns an error message
+    """
+    # Authenticates user and validates data
     validation_result = validate_product_for_update(product_id)
     if validation_result['status'] != 'success':
         print(validation_result['message'])
-
         code = validation_result['code']
         del validation_result['code']
         return jsonify(validation_result), code
 
+    # Returns status and message from update_product_data()
     db_response = delete_product_data(product_id)
-
     if db_response['status'] == 'success':
         return jsonify(db_response), 200
     else:
@@ -384,19 +431,24 @@ def delete_product(product_id):
 
 @app.route('/products/update', methods=['PUT'])
 def update_product():
+    """Updates a product in the database table Products.
+    Args: data containing 'project_id' and product data from the ecoportal product-list
+    Authenticates the user be checking that the project_id associated with this product_id is in session.
+    If successfull; updates the product data. Otherwise; returns an error message
+    """
     product_data = request.get_json()
     print(product_data)
 
+    # Authenticates user and validates data
     validation_result = validate_product_for_update(product_data['product_id'])
     if validation_result['status'] != 'success':
         print(validation_result['message'])
-
         code = validation_result['code']
         del validation_result['code']
         return jsonify(validation_result), code
     
+    # Returns status and message from update_product_data()
     db_response = update_product_data(product_data)
-
     if db_response['status'] == 'success':
         return jsonify(db_response), 200
     else:
@@ -405,9 +457,10 @@ def update_product():
 
 @app.route('/products/emission-data/<uuid>', methods=['GET'])
 def ecoportal_properties(uuid):
-    """Takes an ecoportal uuid as input
-    Fetches emission factors and reference-data from ecoportal
-    Returns a json containing "emission_factors" (dict of floats) and "unit" (string)
+    """Args: an ecoportal uuid (string)
+    Retrieves emission factors and reference-data from the Ecoportal API
+    If successful, returns "emission_factors" (dict of floats) and "unit" (string)
+    otherwise; returns an error message
     """
     print('uuid: ', uuid)
     eco_portal_response = fetch_emission_factors(uuid)
@@ -420,6 +473,10 @@ def ecoportal_properties(uuid):
 
 @app.route('/products/list', methods=['GET'])
 def get_productlist():
+    """Retrieves product data from the Ecoportal API
+    If successful, returns product data for all products meeting the criteria specified in "fetch_productlist()"
+    Otherwise, returns an error message.
+    """
     eco_portal_response = fetch_productlist()
     print(eco_portal_response['message'])
 

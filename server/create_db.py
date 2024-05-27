@@ -65,6 +65,7 @@ def main():
         regNo TEXT,
         validUntil TEXT,
         classific TEXT,
+        EPD_URL TEXT,
         FOREIGN KEY (project_id) REFERENCES Projects(project_id)
     );"""
 

@@ -1,11 +1,11 @@
 <template>
   <div class="layout">
     <nav-header></nav-header>
-
     <main class="container"> 
       <h2>{{ heading }}</h2>
       <div v-if="isLoggedInComputed && currentProject">
 
+        <!-- Dropdown menu for selecting unit -->
         <select id="selectedDataFormat-dropdown" class="form-control" 
           v-model="selectedDataFormat" @change="handleFormatSelection"  required>
           <option 
@@ -16,34 +16,40 @@
           </option>
         </select>
 
+        <!-- Table of emission data -->
         <div class="table-responsive">
-        <table class="table table-hover table-sm" >
-          <thead class="table-light">
-            <tr>
-              <th
-                v-for="heading in tableHeadings"
-                :key="heading"
-                scope="row">
-                {{ heading }}
-              </th>
-            </tr> 
-          </thead>
-          <tbody>
-            <tr 
-              v-for="row in resultList"
-              :key="row.bygningsdel">
-              <td
-                v-for="(col, index) in row"
-                :key="index">
-                {{ col }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-        <hr class="content-seperator">
-        <PieChart :resultList="resultList"/>
-      </div>
+          <table class="table table-hover table-sm" >
+            <thead class="table-light">
+              <tr>
+                <th
+                  v-for="heading in tableHeadings"
+                  :key="heading"
+                  scope="row">
+                  {{ heading }}
+                </th>
+              </tr> 
+            </thead>
+            <tbody>
+              <tr v-for="row in resultList.slice(0, resultList.length - 1)" :key="row.bygningsdel">
+                <td v-for="(value, key) in row" :key="key">
+                  {{ value }}
+                </td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td v-for="(value, key) in resultList[resultList.length - 1]" :key="key">
+                  {{ value }}
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+
+          <!-- Display chart -->
+        </div>
+          <hr class="content-seperator">
+          <PieChart :resultList="resultList"/>
+        </div>
         <div v-else-if="userComputed === null">
           <p>Logg inn for å se resultater</p>
         </div>
@@ -226,14 +232,14 @@
 </script>
 
 <style scoped>
-    .table-responsive {
-      margin-top: 1.5em;
-    }
-    button {
-        margin-bottom: 1.5em;
-    }
-    .content-seperator {
-      margin-top: 2.5em;
+  .table-responsive {
+    margin-top: 1.5em;
+  }
+  button {
       margin-bottom: 1.5em;
-    }
+  }
+  .content-seperator {
+    margin-top: 2.5em;
+    margin-bottom: 1.5em;
+  }
 </style>

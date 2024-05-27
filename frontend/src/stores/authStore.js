@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { getData, postData } from '../utils/http-requests.js'
+import { getTodaysDate } from '../utils/misc.js'
 
 
 export const useAuthStore = defineStore('auth', {
@@ -11,6 +12,8 @@ export const useAuthStore = defineStore('auth', {
     currentProject: null
   }),
   actions: {
+
+    // Handle User state
     logIn(user) {
       console.log(user);
       this.isLoggedIn = true;
@@ -30,7 +33,7 @@ export const useAuthStore = defineStore('auth', {
     },
     async checkSession() {
       const response = await getData('/session');
-      // console.log(response)
+
       if (response.status === 'success') {
         this.isLoggedIn = true;
         this.user = response;
@@ -43,6 +46,8 @@ export const useAuthStore = defineStore('auth', {
         this.userName = '';
       }
     },
+
+    // Handle Project state
     setCurrentProject(project) {
       this.currentProject = project;
       console.log('setCurrentProject: ', this.currentProject.name);
@@ -51,13 +56,6 @@ export const useAuthStore = defineStore('auth', {
     pushToProjects(project) {
       this.projects.push(project);
     },
-    pushToProducts(product) {
-      this.currentProject.products.push(product);
-    },
-    popFromProducts(product_id) {
-      console.log(`popFromProducts called for id: ${product_id}`);
-      this.currentProject.products = this.currentProject.products.filter(p => p.product_id !== product_id);
-    },
     popFromProjects(project_id) {
       console.log(`popFromProjects called for id: ${project_id}`);
       if (this.currentProject?.project_id === project_id) {
@@ -65,6 +63,24 @@ export const useAuthStore = defineStore('auth', {
       }
 
       this.projects = this.projects.filter(p => p.project_id !== project_id);
+    },
+
+    // Handle Product state
+    pushToProducts(product) {
+      console.log(`pushToProducts called for id: ${product.product_id}`);
+      if (this.currentProject) {
+          this.currentProject.products.push(product);
+          // updated_product = this.projects?.find(p => p.project_id === currentProject.project_id);
+          this.currentProject.updated_date = getTodaysDate();
+      }
+      console.log(this.currentProject)
+    },
+    popFromProducts(product_id) {
+      console.log(`popFromProducts called for id: ${product_id}`);
+      if (this.currentProject) {
+        this.currentProject.products = this.currentProject.products.filter(p => p.product_id !== product_id);
+        this.currentProject.updated_date = getTodaysDate();
+      }
     },
   }
 });

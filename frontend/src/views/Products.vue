@@ -1,52 +1,48 @@
 <template>
-    <div class="layout">
-      <Nav-header></Nav-header>
-      
-      <main class="container">
-        <h2>{{ heading }}</h2>
-        <div v-if="isLoggedInComputed && currentProject">
-
-          <!-- Open productModal to add new product to the project -->
-          <button type="button" class="btn btn-primary toggle-modal-button"
-            @click="toggleAddModal">
-            Nytt Produkt
-          </button>
-          <product-add-modal
-            :is-active="isAddModalActive"
-            @close="isAddModalActive = false"
-            @submit-product="handleAddModalSubmit">
-          </product-add-modal>
-          <!-- Open productUpdateModal to add new product to the project -->
-          <!-- Uses v-if to trigger mounted() everytime its activated -->
-          <Product-update-modal
-            v-if="isUpdateModalActive"
-            :is-active="isUpdateModalActive"
-            :productToBeUpdated="productToBeUpdated"
-            @close="isUpdateModalActive = false"
-            @submit-product="handleUpdateModalSubmit">
-          </Product-update-modal>
+  <div class="layout">
+    <Nav-header></Nav-header>
     
-          <!-- Table of products included in the project -->
-          <div class="table-responsive">
+    <main class="container">
+      <h2>{{ heading }}</h2>
+      <div v-if="isLoggedInComputed && currentProject">
+
+        <!-- Open productModal to add new product to the project -->
+        <button type="button" class="btn btn-primary toggle-modal-button"
+          @click="toggleAddModal">
+          Nytt Produkt
+        </button>
+        <product-add-modal
+          :is-active="isAddModalActive"
+          @close="isAddModalActive = false"
+          @submit-product="handleAddModalSubmit">
+        </product-add-modal>
+
+        <!-- Open productUpdateModal to add new product to the project -->
+        <Product-update-modal
+          v-if="isUpdateModalActive"
+          :is-active="isUpdateModalActive"
+          :productToBeUpdated="productToBeUpdated"
+          @close="isUpdateModalActive = false"
+          @submit-product="handleUpdateModalSubmit">
+        </Product-update-modal>
+  
+        <!-- Table of products included in the project -->
+        <div class="table-responsive-md">
           <table class="table table-sm table-hover" >
             <thead class="table-light">
               <tr>
-                 <!-- For sortable columns, add  -->
+                <!-- For sortable columns display sort-icon and listen for click -->
                 <th v-for="entry in tableEntries" :key="entry">
                   <template  v-if="entry.sortable">
-                    <button type="button"
-                      :class="{
-                        // 'border border-success border-opacity-75 sorted-header': entry.body === currentSort,
-                        'btn btn-default heading text-start': true
-                      }"
+                    <button type="button" class="btn btn-default heading text-start text-nowrap"
                       @click="sortTable(entry)">
                       {{ entry.heading }}
                       <i
                         :class="{
                           'fa-solid': true, 
                           'fa-sort': entry.body !== currentSort, 
-                          'fa-sort-down': entry.body === currentSort && !sortAscending, 
-                          'fa-sort-up': entry.body === currentSort && sortAscending,
+                          'fa-sort-down': entry.body === currentSort && sortAscending, 
+                          'fa-sort-up': entry.body === currentSort && !sortAscending,
                           'faded-icon': true 
                         }">
                       </i>
@@ -72,6 +68,8 @@
                 <td>{{ product.type }}</td>
                 <td>{{ product.quantity }}</td>
                 <td readonly>{{ product.unit }}</td>
+
+                <!-- Dropdown menu for product-rows -->
                 <td>
                   <div class="dropdown"> 
                     <a class="btn ellipsis-container" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
@@ -88,20 +86,21 @@
               </tr>
             </tbody>
           </table>
+          <p class="placeholder-glow if-copying-active" v-if="isCopyInProgress">
+            <span class="placeholder col-12 if-copying-active"></span>
+          </p>
         </div>
-        </div>
+      </div>
+      <div v-else-if="userComputed === null">
+        <p>Logg inn for å se materialer</p>
+      </div>
+      <div v-else>
+        <p>Velg et prosjekt</p>
+      </div>
+    </main>
 
-        <!-- TODO: Implement page when not logged in -->
-        <div v-else-if="userComputed === null">
-          <p>Logg inn for å se materialer</p>
-        </div>
-        <div v-else>
-          <p>Velg et prosjekt</p>
-        </div>
-      </main>
-
-      <nav-footer />
-    </div>
+    <nav-footer />
+  </div>
 </template>
     
 <script>
@@ -110,11 +109,10 @@
   import ProductAddModal from '../components/ProductAddModal.vue';
   import ProductUpdateModal from '../components/ProductUpdateModal.vue';
   import cloneDeep from 'lodash/cloneDeep';
-  import { getData, postData, deleteData, updateData } from '../utils/http-requests.js'
-  import { displaySuccessToast, displayErrorToast, displayWarningToast } from '../utils/toasts.js'
+  import { postData, deleteData, updateData } from '../utils/http-requests.js'
+  import { displaySuccessToast, displayErrorToast } from '../utils/toasts.js'
   import { saveToLocalStorage, getFromLocalStorage } from '../utils/local-storage.js'
   import { setDisplayedName } from '../utils/misc.js'
-  
   import { useAuthStore } from '../stores/authStore';
   import { computed } from 'vue';
 
@@ -143,7 +141,7 @@
         });
 
         console.log(`Projectname: ${currentProject.value?.name}\nid: ${currentProject.value?.project_id}\nnumber of products: ${productList.value.length}`);
-
+        console.log(productList.value)
         return { isLoggedInComputed, userComputed, currentProject, heading, 
           productList, pushToProducts, popFromProducts
         };
@@ -164,6 +162,7 @@
         isAddModalActive: false,
         isUpdateModalActive: false,
         productToBeUpdated: null,
+        isCopyInProgress: false
       }
     },
 
@@ -199,7 +198,6 @@
         };
         // product.product is now part of the main object
         delete fullProjectData.product;
-        console.log(fullProjectData)
 
         const newProduct = await postData(fullProjectData, '/products/add')
         console.log(newProduct)
@@ -253,12 +251,19 @@
         this.productToBeUpdated = product;
         this.toggleUpdateModal();
       },
-      copyButtonHandler(product) {
+      async copyButtonHandler(product) {
+        if (this.isCopyInProgress) {
+            displayErrorToast('Kopiering pågår, venligst vent.');
+            return;
+        }
+        this.isCopyInProgress = true;   
+
         console.log('Copying product:', product.name);
         product = cloneDeep(product);
         product.product = {};
         console.log(product);
-        this.handleAddModalSubmit(product);
+        await this.handleAddModalSubmit(product);
+        this.isCopyInProgress = false;
       }
     },
     mounted() {
@@ -304,5 +309,22 @@
     padding-top: 0.1em;
     padding-bottom: 0.1em;
     margin: 0;
+  }
+  .if-copying-active {
+      margin-top: -0.5em;
+      padding-top: 0;
+      height: 2em;
+    }
+  /* Thanks to leocaseiro https://dcblog.dev/stop-bootstrap-drop-menus-being-cut-off-in-responsive-tables */
+  @media (max-width: 767px) {
+    .table-responsive-md .dropdown-menu {
+        position: static !important;
+        -webkit-overflow-scrolling: touch; /* Improves scrolling on touch devices */
+    }
+  }
+  @media (min-width: 768px) {
+      .table-responsive {
+          overflow: visible;
+      }
   }
 </style>

@@ -1,20 +1,18 @@
 <template>
   <div class="layout">
     <nav-header></nav-header>
-
     <main class="container">
       <h2>Prosjektoversikt</h2>
       <div v-if="isLoggedInComputed">
 
         <button type="button" class="btn btn-primary toggle-modal-button" @click="toggleAddModal">Nytt Prosjekt</button>
         <project-add-modal
-            :is-active="isAddModalActive"
-            @close="isAddModalActive = false"
-            @submit-project="handleAddProject">
+          :is-active="isAddModalActive"
+          @close="isAddModalActive = false"
+          @submit-project="handleAddProject">
         </project-add-modal>
 
         <!-- Open productUpdateModal to add new product to the project -->
-        <!-- Uses v-if to trigger mounted() everytime its activated -->
         <project-update-modal
           v-if="isUpdateModalActive"
           :is-active="isUpdateModalActive"
@@ -35,35 +33,32 @@
           </div>
 
         <!-- Table of projects -->
-        <div class="table-responsive">
+        <div class="table-responsive-md">
         <table class="table table-hover table-sm" >
           <thead class="table-light">
             <tr>
+              <!-- For sortable columns display sort-icon and listen for click -->
               <th v-for="entry in tableEntries" :key="entry">
                 <template  v-if="entry.sortable">
-                    <button type="button"
-                      :class="{
-                        // 'border border-success border-opacity-75 sorted-header': entry.body === currentSort,
-                        'btn btn-default heading text-start': true
-                      }"
-                      @click="sortTable(entry)">
-                      {{ entry.heading }}
-                      <i
-                        :class="{
-                          'fa-solid': true, 
-                          'fa-sort': entry.body !== currentSort, 
-                          'fa-sort-down': entry.body === currentSort && !sortAscending, 
-                          'fa-sort-up': entry.body === currentSort && sortAscending,
-                          'faded-icon': true 
-                        }">
-                      </i>
-                    </button>
-                  </template>
-                  <template  v-else>
-                    <button type="button" disabled class="btn btn-default border border-0 heading" style="padding-left: 0; font-weight: bold;">
+                  <button type="button" class="btn btn-default heading text-start text-nowrap"
+                    @click="sortTable(entry)">
                     {{ entry.heading }}
-                    </button>
-                  </template>
+                    <i
+                      :class="{
+                        'fa-solid': true, 
+                        'fa-sort': entry.body !== currentSort, 
+                        'fa-sort-down': entry.body === currentSort && sortAscending, 
+                        'fa-sort-up': entry.body === currentSort && !sortAscending,
+                        'faded-icon': true 
+                      }">
+                    </i>
+                  </button>
+                </template>
+                <template  v-else>
+                  <button type="button" disabled class="btn btn-default border border-0 heading" style="padding-left: 0; font-weight: bold;">
+                  {{ entry.heading }}
+                  </button>
+                </template>
               </th>
               <th></th>
             </tr>
@@ -77,6 +72,7 @@
               <td :class="{ archived: !project.active }" @click="handleProjectSelection(project)">{{ project.created_date }}</td>
               <td :class="{ archived: !project.active }" @click="handleProjectSelection(project)">{{ project.updated_date }}</td>
 
+              <!-- Dropdown menu for project-rows -->
               <td>
                 <div class="dropdown">
                   <a class="btn ellipsis-container" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
@@ -96,13 +92,14 @@
                   </ul>
                 </div>
               </td>
-
             </tr>
           </tbody>
         </table>
+        <p class="placeholder-glow if-copying-active" v-if="isCopyInProgress">
+          <span class="placeholder col-12 if-copying-active"></span>
+        </p>
         </div>
       </div>
-      <!-- TODO: Implement page when not logged in -->
       <div v-else>
           <p>Logg inn for å se materialer</p>
       </div>
@@ -160,7 +157,8 @@
         sortAscending: true,
         isAddModalActive: false,
         isUpdateModalActive: false,
-        projectToBeUpdated: null
+        projectToBeUpdated: null,
+        isCopyInProgress: false
       };
     },
     methods: {
@@ -202,7 +200,6 @@
         console.log(this.projectToBeUpdated)
         this.toggleUpdateModal();
       },
-
       async deleteButtonHandler(project) {
         console.log('deleteButtonHandler called');
         const project_id = project.project_id
@@ -218,8 +215,13 @@
         displaySuccessToast('Prosjektet er slettet!')
         this.popFromProjects(project_id);
       },
+      async copyButtonHandler(project){
+        if (this.isCopyInProgress) {
+            displayErrorToast('Kopiering pågår, venligst vent.');
+            return;
+        }
+        this.isCopyInProgress = true;   
 
-      copyButtonHandler(project){       
         const incrementName = (name) => {
           // Look for the pattern: "(" -> digits -> ")"
           // If a match is found; extract and increment the number, and use it to replace the old number
@@ -238,9 +240,9 @@
         // create a deep clone to avoid entanglements
         const copiedProject = cloneDeep(project);
         copiedProject.name = incrementName(copiedProject.name);
-        this.handleAddProject(copiedProject);
+        await this.handleAddProject(copiedProject);
+        this.isCopyInProgress = false;   
       },
-
       async handleAddProject(project) {
         project.user_id = this.userComputed.user_id;
         console.log(project);
@@ -260,7 +262,6 @@
         this.pushToProjects(project); 
         this.isAddModalActive = false;
       },
-
       async handleUpdateModalSubmit(projectData) {
         console.log(projectData)
         const db_response = await updateData(projectData, '/projects/update');
@@ -277,8 +278,6 @@
         displaySuccessToast('Produktet er oppdatert');
         this.isUpdateModalActive = false;
       },
-
-      
       async handleProjectSelection(project) {
         console.log('handleProjectSelection called for: ' + project.name);
         if (!project.active) {
@@ -333,28 +332,46 @@
 </script>
 
 <style scoped>
-    .heading {
-        width: 100%;
-        padding: 0.1em;
-        padding-left: 0; 
-        font-weight: bold;
-      }
-    .faded-icon {
-      opacity: 0.6;
+  .heading {
+      width: 100%;
+      padding: 0.1em;
+      padding-left: 0; 
+      font-weight: bold;
     }
-    .toggle-modal-button {
-    margin-bottom: 1.5em;
+  .faded-icon {
+    opacity: 0.6;
   }
-    td {
-      cursor: pointer;
-    }
-    .archived {
-      color: rgb(145, 143, 143);
-      font-style: italic;
-    }
-    .ellipsis-container {
+  .toggle-modal-button {
+  margin-bottom: 1.5em;
+  }
+  td {
+    cursor: pointer;
+  }
+  .archived {
+    color: rgb(145, 143, 143);
+    font-style: italic;
+  }
+  .ellipsis-container {
     padding-top: 0.1em;
     padding-bottom: 0.1em;
     margin: 0;
+  }
+  .if-copying-active {
+    margin-top: -0.5em;
+    padding-top: 0;
+    height: 2em;
+  }
+
+  /* Thanks to leocaseiro https://dcblog.dev/stop-bootstrap-drop-menus-being-cut-off-in-responsive-tables  */
+  @media (max-width: 767px) {
+    .table-responsive-md .dropdown-menu {
+        position: static !important;
+        -webkit-overflow-scrolling: touch;
+    }
+  }
+  @media (min-width: 768px) {
+      .table-responsive {
+          overflow: visible;
+      }
   }
 </style>

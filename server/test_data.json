@@ -1,0 +1,149 @@
+{
+  "users": [
+    {
+      "name": "Erlend",
+      "email": "a@a.a",
+      "password": "aaa",
+      "photo_filename": "profile-picture1.png"
+    },
+    {
+      "name": "Anders",
+      "email": "b@b.b",
+      "password": "bbb",
+      "photo_filename": "profile-picture2.png"
+    }
+  ],
+  "projects": [
+    {
+      "name": "Innoasis",
+      "type": "Kontor",
+      "bta": 5500,
+      "prosjektstart": 2028,
+      "analyseperiode": 50,
+      "address": "min adresse",
+      "created_date": "08.01.2023",
+      "updated_date": "29.06.2023",
+      "active": true,
+      "user_id": 1
+    },
+    {
+      "name": "Finansparken",
+      "type": "Kontor",
+      "bta": 6500,
+      "prosjektstart": 2025,
+      "analyseperiode": 60,
+      "address": "min adresse2",
+      "created_date": "09.04.2023",
+      "updated_date": "09.04.2024",
+      "active": true,
+      "user_id": 1
+    },
+    {
+      "name": "Herbarium",
+      "type": "Handel",
+      "bta": 7800,
+      "prosjektstart": 2014,
+      "analyseperiode": 50,
+      "address": "min adresse3",
+      "created_date": "02.03.2021",
+      "updated_date": "01.01.2022",
+      "active": true,
+      "user_id": 1
+    }
+  ],
+  "products": [
+    {
+      "project_id": 1,
+      "quantity": 500,
+      "unit": "m3",
+      "uuid": "some-uuid1",
+      "owner": "Jærbetong",
+      "name": "Stedstøpt Betong",
+      "displayedName": "Stedstøpt Betong",
+      "regNo": "some regNo1",
+      "utskiftingsintervall": 50,
+      "vedlikeholdsutslipp": 1,
+      "validUntil": "2024",
+      "classific": "some classification1",
+      "bygningsdel": "Dekker (25)",
+      "produktgruppe": "Dekker (225)",
+      "type": "Betong",
+      "EPD_URL": "www.google.no",
+      "emission_factors": {
+        "product_id": 1,
+        "A1": 5,
+        "A2": 7,
+        "A3": 3,
+        "A4": 2,
+        "C1": 1,
+        "C2": 2,
+        "C3": 3,
+        "C4": 2,
+        "D": 1,
+        "A1A2A3": 0
+      }
+    },
+    {
+      "project_id": 1,
+      "quantity": 500,
+      "unit": "m3",
+      "uuid": "some-uuid2",
+      "owner": "Jærbetong",
+      "name": "Påstøp",
+      "displayedName": "Stedstøpt Betong",
+      "regNo": "some regNo2",
+      "utskiftingsintervall": 20,
+      "vedlikeholdsutslipp": 4,
+      "validUntil": "2024",
+      "classific": "some classification2",
+      "bygningsdel": "Dekker (25)",
+      "produktgruppe": "Dekker (225)",
+      "type": "Isolasjon",
+      "EPD_URL": "www.google.no",
+      "emission_factors": {
+        "product_id": 2,
+        "A1": 2,
+        "A2": 3,
+        "A3": 4,
+        "A4": 5,
+        "C1": 2,
+        "C2": 3,
+        "C3": 5,
+        "C4": 1,
+        "D": 2,
+        "A1A2A3": 0
+      }
+    },
+    {
+      "project_id": 1,
+      "quantity": 500,
+      "unit": "m3",
+      "uuid": "some-uuid3",
+      "owner": "Glava",
+      "name": "Glassull",
+      "displayedName": "Stedstøpt Betong",
+      "regNo": "some regNo3",
+      "utskiftingsintervall": 40,
+      "vedlikeholdsutslipp": 0,
+      "validUntil": "2024",
+      "classific": "some classification3",
+      "bygningsdel": "Innervegger (24)",
+      "produktgruppe": "Innvendige overflater og kledninger (246)",
+      "type": "Betong",
+      "EPD_URL": "www.google.no",
+      "emission_factors": {
+        "product_id": 3,
+        "A1": 12,
+        "A2": 5,
+        "A3": 6,
+        "A4": 8,
+        "C1": 1,
+        "C2": 4,
+        "C3": 3,
+        "C4": 2,
+        "D": 13,
+        "A1A2A3": 0
+      }
+    }
+  ]
+}

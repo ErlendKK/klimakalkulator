@@ -101,7 +101,7 @@ Inndata for registrering av nye prosjekter oppgis gjennom et skjema i et Bootstr
 
 
 
-## API
+## REST API
 '/users/register', methods=['POST']
 '/login', methods=['POST']
 '/logout', methods=['POST']
@@ -117,3 +117,12 @@ Inndata for registrering av nye prosjekter oppgis gjennom et skjema i et Bootstr
 '/products/emission-data/<uuid>', methods=['GET']
 '/products/list', methods=['GET']
 
+
+
+## Credits:
+* Thanks to leocaseiro https://dcblog.dev/stop-bootstrap-drop-menus-being-cut-off-in-responsive-tables for sharing his work-around for a bug conserning dropdown-menus in tables with the Bootstrap "table-responsive" attribute.
+
+* Modals: created based on the boilerplate found here: https://getbootstrap.com/docs/5.0/components/modal/
+* Pie Chart: created based on the boilerplate found here: https://vue-chartjs.org/guide/
+* function getTodaysDate(): based on these examples: https://www.scaler.com/topics/get-current-date-in-javascript/
+* Regex for passord: https://dev.to/temmietope/regex-for-passwords-3c1f
