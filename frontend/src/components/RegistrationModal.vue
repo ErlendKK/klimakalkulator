@@ -11,7 +11,7 @@
             id="navn-input" 
             v-model="newUser.name" 
             placeholder="Oppgi Navn"
-            pattern="[A-Za-zæøåÆØÅ '-]+"
+            required
             title="Navnet kan bare inneholde bokstaver og mellomrom">
         </div>
 
@@ -23,6 +23,7 @@
             class="form-control" 
             id="epost-input" 
             v-model="newUser.email" 
+            pattern=".+@[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*\.[a-zA-Z]+$"
             placeholder="Oppgi Epost">
         </div>
 
@@ -138,8 +139,8 @@
       },
       /**
        * Handles the submission of new user data. 
-       * Calls validateData(), and creates a FormData object which is posted to server
-       * If the server response has status="success", it calls the global logIn() to log in the user.
+       * validates data and creates a FormData object which is posted to server
+       * If the request is successfull, it calls the global logIn() to log in the user.
        */
       async handleSubmit() {
         const dataValidation = this.validateData()
@@ -162,7 +163,6 @@
         const db_response = await postForm(formData, '/users/register');
         if (db_response.status == 'success') {
           this.newUser = db_response.user_data;
-          console.log(this.newUser)
           displaySuccessToast(`Velkommen ${this.newUser.name}`);
           this.logIn(this.newUser);
           this.handleClose('close')

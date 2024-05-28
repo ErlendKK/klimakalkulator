@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "reset": "cd server && python reset_db.py",
-    "dev-back": "cd server && python create_db.py && python app.py",
-    "prod-back": "cd server && python create_db.py && python app.py built",
+    "dev-server": "cd server && python create_db.py && python app.py",
+    "prod-server": "cd server && python create_db.py && python app.py built",
     "test-db": "cd server && python handle_db.py",
     "dev-front": "cd frontend && npm run dev",
     "build": "cd frontend && npm run build",

@@ -95,7 +95,7 @@
         <p>Logg inn for å se materialer</p>
       </div>
       <div v-else>
-        <p>Velg et prosjekt</p>
+        <p><router-link to="/projects">Velg et prosjekt</router-link></p>
       </div>
     </main>
 

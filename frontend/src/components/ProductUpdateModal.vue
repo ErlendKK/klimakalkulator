@@ -120,7 +120,7 @@
           v-if="ecoPortalStatus === 'success' && filteredProducts.length">
           <label for="enhet-update-dropdown" class="form-label">Enhet</label>
           <select id="enhet-update-dropdown" class="form-control" v-model="newProduct.unit" required readonly>
-            <option>{{ newProduct.unit }}</option>
+            <option disabled>{{ newProduct.unit }}</option>
           </select> 
         </div>
         <div class="col-sm-6"
@@ -183,6 +183,7 @@
   import { getData } from '../utils/http-requests.js';
   import { useAuthStore } from '../stores/authStore';
   import { displayErrorToast } from '../utils/toasts.js'
+  import cloneDeep from 'lodash/cloneDeep';
 
     
   export default {
@@ -276,9 +277,9 @@
         this.ecoPortalStatus = 'success';
       },
       initializeProductOptions() {
-        this.newProduct = this.productToBeUpdated;
-        this.newProduct.displayedName = setDisplayedName(this.productToBeUpdated, 45);
-        this.newProduct.product = {...this.productToBeUpdated};
+        this.newProduct = cloneDeep(this.productToBeUpdated);
+        this.newProduct.displayedName = setDisplayedName(this.newProduct, 45);
+        this.newProduct.product = {...this.newProduct};
         console.log(this.newProduct)
         this.productsForSelection = this.ecoPortalData.filter(product => product.uuid !== this.newProduct.uuid);
       },

@@ -74,7 +74,7 @@
             pattern="^\d+$"
             required>
         </div>
-        
+
         <!-- Input form for Analyseperiode -->
         <div class="col-md-6 col-sm-4">
           <label for="analyseperiode-input" class="form-label">Analyseperiode (år)</label>
@@ -101,6 +101,7 @@
   import { klimagassreferanser } from '../utils/breeam.js'
   import { getTodaysDate } from '../utils/misc.js'
   import ModalComponent from '../components/ModalComponent.vue';
+  import cloneDeep from 'lodash/cloneDeep';
 
   export default {
     name: 'ProjectUpdateModal',
@@ -115,7 +116,7 @@
       return {
         title: "Oppdater prosjektet",
         bygningskategorier: Object.keys(klimagassreferanser),
-        newProject: this.projectToBeUpdated
+        newProject: cloneDeep(this.projectToBeUpdated)
       }
     },
     mounted() {

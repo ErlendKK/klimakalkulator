@@ -10,6 +10,7 @@
           class="form-control" 
           id="login-email-input" 
           v-model="loginInfo.email" 
+          pattern=".+@[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*\.[a-zA-Z]+$"
           placeholder="Oppgi Epost">
       </div>
 
@@ -20,7 +21,8 @@
           type="password" 
           class="form-control" 
           id="login-passord-input" 
-          v-model="loginInfo.password" 
+          v-model="loginInfo.password"
+          minlength="8"
           placeholder="Oppgi Passord">
       </div>
 
@@ -31,6 +33,7 @@
           class="form-check-input" 
           id="login-stay-logged-in-checkbox" 
           v-model="loginInfo.stayLoggedIn" 
+          minlength="8"
           checked>
         <label class="form-check-label" for="login-stay-logged-in-checkbox">
           Forbli innlogget
@@ -81,7 +84,9 @@
         this.$emit(eventName);
         this.resetLoginInfo();
       },
-      // Ensures that newProduct is refreshed everytime the Modal is opened.
+      /** 
+      * Ensures that newProduct is refreshed everytime the Modal is opened.
+      */
       resetLoginInfo() {
         this.loginInfo = {
           email: '',
@@ -89,12 +94,11 @@
           stayLoggedIn: true,
         };
       },
+      /** 
+      * Sends a login request to the server.
+      * If the request is successfuls; call the global logIn() to log in the user.
+      */
       async handleSubmit() {
-        if (!this.validateInput()) {
-          displayWarningToast("Venligst fyll ut alle obligatoriske felt");
-          return;
-        }
-
         const user = await postData(this.loginInfo, '/login');
         if (user.status != 'success') {
           displayWarningToast("Feil epost eller passord");
@@ -104,11 +108,6 @@
         displaySuccessToast(`Velkommen ${user.name}`);
         this.logIn(user);
         this.handleClose('close');
-      },
-
-      // make sure inputs are non-empty
-      validateInput() {
-        return this.loginInfo.email.length && this.loginInfo.password.length;
       },
     }
   };

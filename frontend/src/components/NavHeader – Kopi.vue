@@ -47,7 +47,7 @@
             <li 
               v-else 
               class="nav-item d-none d-md-block router" 
-              @click="toggleLoginModal">
+              @click="isLoginModalActive = true">
               Logg inn
             </li>
           </ul>
@@ -58,9 +58,10 @@
           <li class="nav-item dropdown">
             <template v-if="isPhotoDisplayed">
               <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <img class="rounded-circle profile-picture"
-                  :src="userComputed.photo_url" 
+                <img
+                  :src="userComputed.photo_url"
                   @error="handleImageError"
+                  class="rounded-circle profile-picture"
                   height="45"
                   loading="lazy"
                 />
@@ -71,11 +72,21 @@
                 <i class="bi bi-person-circle rounded-circle profile-picture"></i>
               </a>
             </template>
-            <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-              <li v-for="item in dropDownMenuItems" :key="item" >
-                <a v-if="item.displayed" class="dropdown-item" href="#" @click="item.onClick()">{{item.title}}</a>
-              </li>
-            </ul>
+            <template
+              v-if="isLoggedInComputed">
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                <li><a class="dropdown-item" href="#">Profil</a></li>
+                <li><a class="dropdown-item" href="#" @click="logOut">Logg ut</a></li>
+              </ul>
+            </template>
+            <template
+              v-else>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                <li><a class="dropdown-item" href="#" @click="isRegistrationModalActive = true">Registrer</a></li>
+                <li><a class="dropdown-item" href="#" @click="isLoginModalActive = true">Logg Inn</a></li>
+                <li><a class="dropdown-item" href="#">Info</a></li>
+              </ul>
+            </template>
           </li>
         </ul>
 
@@ -111,59 +122,25 @@
       return {
         isRegistrationModalActive: false,
         isLoginModalActive: false,
-        imageError: false,
+        imageError: false
       }
     },
     methods: {
-      /** 
-      * Toggles the state of registrationModal and closes loginModal to avoid overlap
-      */
-      toggleRegistrationModal() {
-        this.isRegistrationModalActive = !this.isRegistrationModalActive;
-        this.isLoginModalActive = false;
-      },
-      /** 
-      * Toggles the state of loginModal and closes registrationModal to avoid overlap
-      */
-      toggleLoginModal() {
-        this.isLoginModalActive = !this.isLoginModalActive;
-        this.isRegistrationModalActive = false;
-      },
-      /**
-       * Toggels the state of both registration and login modals.
-       */
       swichModal() {
         this.isRegistrationModalActive = !this.isRegistrationModalActive;
         this.isLoginModalActive = !this.isLoginModalActive;
       },
-      /** 
-      * Handles errors when loading profile pictures
-      */
       handleImageError() {
         console.log('Error loading user image. URL: ' + this.userComputed.photo_url);
         this.imageError = true;
       }
     },
     computed: {
-      /** 
-      * Boolean controlling whether to display a profile picture
-      */
       isPhotoDisplayed() {
         const response = this.isLoggedInComputed && this.userComputed?.photo_url && !this.imageError;
         console.log('isPhotoDisplayed:' + response);
         console.log('isLoggedInComputed:' + this.isLoggedInComputed)
         return response;
-      },
-      /** 
-      * List of items to be displayed in the dropdown menu.
-      * format = [title:string, displayed:boolean, onClick:function]
-      */
-      dropDownMenuItems() { 
-        return [
-          {title: 'Logg ut', displayed: this.isLoggedInComputed, onClick: () => this.logOut()},
-          {title: 'Registrer', displayed: !this.isLoggedInComputed, onClick: () => this.toggleRegistrationModal()},
-          {title: 'Logg in', displayed: !this.isLoggedInComputed, onClick: () => this.toggleLoginModal(), },
-        ];
       }
     }
   }

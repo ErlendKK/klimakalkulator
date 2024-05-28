@@ -96,7 +96,7 @@
           <label for="enhet-dropdown" class="form-label">Enhet</label>
           <select id="enhet-dropdown" class="form-control" v-model="newProduct.unit" required>
             <template v-if="displayUnit">
-              <option>{{ newProduct.unit }}</option>
+              <option disabled>{{ newProduct.unit }}</option>
             </template>
             <template v-else>
               <option disabled value=""></option>
@@ -118,7 +118,7 @@
             placeholder="50"
             required>
         </div>
-        
+
           <!-- Input form for vedlikeholdsutslipp -->
         <div class="col-md-6">
           <label for="vedlikeholdsutslipp-input" class="form-label">Årlige Vedlikeholdsutslipp</label>

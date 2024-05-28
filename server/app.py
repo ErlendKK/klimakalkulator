@@ -115,7 +115,7 @@ def validate_user_registration(user_data):
         return {'status': 'failed', 'message': 'Navn har feil format'}
     
     # Validate email using regex (the part "(\.[a-zA-Z0-9-]+)*" handles sub-domains)
-    email_pattern = r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z]+$'
+    email_pattern = r".+@[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*\.[a-zA-Z]+$"
     if not re.match(email_pattern, email):
         return {'status': 'failed', 'message': 'Eposten har feil format'}
     
@@ -216,9 +216,10 @@ def check_session():
         return jsonify({'status': 'failed', 'message': 'Bruker er ikke i session'})
     
     user = get_userdata_from_db('user_id', user_id)
+
     if not user:
         return jsonify({'status': 'failed', 'message': 'Brukeren er ikke funnet'}), 404
-    
+
     user_data = {k:v for k, v in user.items() if k != 'password_hash'}
     user_data['projects'] = get_project_data_from_db(user_id)
     user_data['photo_url'] = get_photo_URL(user_data)
@@ -230,7 +231,9 @@ def get_photo_URL(user_data):
     Args: user_data: must contain photo_filename
     If successfull; returns a string with the path to the photo. Otherwise; returns None.
     """
-    photo_filename = user_data['photo_filename']
+    print('get_photo_URL')
+    print(user_data)
+    photo_filename = user_data.get('photo_filename', None)
     return f"{SERVER_URL}/user_data/{photo_filename}" if photo_filename else None
 
 
