@@ -97,7 +97,6 @@
   </ModalComponent>
 </template>
   
-    
 <script>
   import { klimagassreferanser } from '../utils/breeam.js'
   import { getTodaysDate } from '../utils/misc.js'

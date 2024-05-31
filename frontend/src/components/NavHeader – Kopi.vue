@@ -63,7 +63,6 @@
                   @error="handleImageError"
                   class="rounded-circle profile-picture"
                   height="45"
-                  loading="lazy"
                 />
               </a>
             </template>

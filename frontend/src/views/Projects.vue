@@ -153,7 +153,7 @@
           {heading: "Sist Endret", body: 'updated_date', sortable: true},
         ],
         displayArchived: false,
-        currentSort: '',  // entry.body
+        currentSort: '',
         sortAscending: true,
         isAddModalActive: false,
         isUpdateModalActive: false,
@@ -223,23 +223,26 @@
         this.isCopyInProgress = true;   
 
         const incrementName = (name) => {
-          // Look for the pattern: "(" -> digits -> ")"
-          // If a match is found; extract and increment the number, and use it to replace the old number
+          // Look for the pattern: "(", digits, ")"
+          // If found; extract and increment the number, and use it to replace the old number
           // Else; append "(1)" to the end of the string
           const regex = /\((\d+)\)$/; 
           const match = name.match(regex);
 
-          if (match) {
-              const num = parseInt(match[1], 10) + 1;
-              return name.replace(regex, `(${num})`);
-          } else {
-              return `${name} (1)`;
-          }
+          if (!match) return `${name} (1)`;
+
+          const num = parseInt(match[1]) + 1;
+          return name.replace(regex, `(${num})`);
         }
 
         // create a deep clone to avoid entanglements
         const copiedProject = cloneDeep(project);
         copiedProject.name = incrementName(copiedProject.name);
+        copiedProject.products.forEach(p => {
+          delete p.project_id
+          delete p.product_id
+        });
+
         await this.handleAddProject(copiedProject);
         this.isCopyInProgress = false;   
       },
@@ -253,9 +256,11 @@
           displayErrorToast(message);
           return;
         }
+        console.log('db_response')
+        console.log(db_response)
 
         project.project_id = db_response.project_id;
-        project.products = [];
+        project.products = db_response?.data?.products ?? [];
         console.log(`handleAddProject SUCCESS for ${project.name}, ID: ${project.project_id}`);
         displaySuccessToast('Prosjektet er registrert')
 
@@ -291,6 +296,7 @@
     },
 
     mounted() {
+      console.log('this.projectList')
       console.log(this.projectList)
       const projectsPreferences = getFromLocalStorage('projectsPreferences');
 

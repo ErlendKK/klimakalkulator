@@ -1,21 +1,23 @@
 import sqlite3
+import json
 from flask import session
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
+from colorama import Fore
+import os
 
-
-# Establish connection to db
-def get_db_connection():
-    conn = sqlite3.connect('userdata.db')
-    conn.row_factory = sqlite3.Row
-    return conn
-
-def get_current_date():
-    # Get the current date
-    current_date = datetime.now()
-    formatted_date = str(current_date.strftime('%d.%m.%Y'))
-    return formatted_date
-
+def get_db_path():
+    """Determines the base path for data files dynamically.
+    Gets the directory where the script is located
+    Defines the path to the 'server' directory relative to the script
+    Checks if running from within 'server' directory to avoid duplication in path
+    """
+    server_dir = os.path.dirname(__file__)
+   
+    if os.getcwd().endswith('server'):
+        server_dir = os.getcwd()
+    return os.path.join(server_dir, 'userdata.db')
+USERDATA = get_db_path()
 
 ################################################################
 ######## USERS #################################################
@@ -33,65 +35,60 @@ def add_user_to_db(data):
     photo_filename = data.get('photo_filename', None)
     password = data.get('password', None)
     password_hash = generate_password_hash(password)
-
+    
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
+        with sqlite3.connect(USERDATA) as conn:
+            cur = conn.cursor()
 
-        # Check if email already exists
-        cur.execute("SELECT email FROM Users WHERE email = ?", (email,))
-        if cur.fetchone(): # retrieves one datapoint if found; else None
-            print(f'add_user_to_db FAILED for: {data["name"]}: "Email already registered.')
-            return {"status": "failed", "message": "Eposten er allerede i bruk."}
+            # Check if email already exists
+            cur.execute("SELECT email FROM Users WHERE email = ?", (email,))
+            if cur.fetchone(): # retrieves one datapoint if found; else None
+                print(Fore.RED+f'add_user_to_db FAILED for: {data["name"]}: "Email already registered.')
+                return {"status": "failed", "message": "Eposten er allerede i bruk."}
 
-        # If not; add the user
-        cur.execute("""
-        INSERT INTO Users (name, email, password_hash, photo_filename)
-        VALUES (?, ?, ?, ?)
-        """, (name, email, password_hash, photo_filename))
-        conn.commit()
+            # If not; add the user
+            cur.execute("""
+            INSERT INTO Users (name, email, password_hash, photo_filename)
+            VALUES (?, ?, ?, ?)
+            """, (name, email, password_hash, photo_filename))
+            conn.commit()
 
-        data["user_id"] = cur.lastrowid
-        data["projects"] = []
-        message = f'add_user_to_db SUCCEEDED for: {data["name"]}'
-        return {"status": "success", 'message': message, "user_data": data }
+            # Retrieve the last inserted row ID and return the result and a status message
+            data["user_id"] = cur.lastrowid
+            data["projects"] = []
+            message = f'add_user_to_db SUCCEEDED for: {data["name"]}'
+            return {"status": "success", 'message': message, "user_data": data }
 
     except Exception as e:
-        print(f'add_user_to_db FAILED for: {data["name"]}. Error: {e}')
-        return {"status": 'failed', "message": "Vi har for tiden probelemer med systemet vårt. Venligst prøv igjen senere"}
-    
-    finally:
-        if conn:
-            conn.close()
+        print(Fore.RED+f'add_user_to_db FAILED for: {data["name"]}. Error: {e}')
+        return {"status": 'failed', "message": "Vi har for tiden problemer med systemet vårt. Vennligst prøv igjen senere"}
 
 
 def get_userdata_from_db(col, value):
-    """" col: the attribute searched (e.g. 'email')
+    """"Retrieves userdata for a given user based on input search parameters
+    Params: col: the attribute searched (e.g. 'email')
     value: the value searched for (e.g. a.a@a)
     returns user-data (name, email, password_hash, photo_filename); or None, 
     """
     try:
-        conn = get_db_connection()
-        cur = conn.cursor()
-        cur.execute(f"SELECT * FROM Users WHERE {col} = ?", (value,))
-        user = cur.fetchone()
+        with sqlite3.connect('userdata.db') as conn:
+            conn.row_factory = sqlite3.Row
+            cur = conn.cursor()
+            cur.execute(f"SELECT * FROM Users WHERE {col} = ?", (value,))
+            user = cur.fetchone()
 
-        if user is None:
-            print("User not found")
-            return {"status": "failed", "message": "Brukeren ble ikke funnet"}
-        
-        user = dict(user)
-        user['status'] = 'success'
-        user['message'] = 'get_userdata_from_db SUCCEEDED'
-        return user
-        
+            if user is None:
+                print(Fore.RED+"User not found")
+                return {"status": "failed", "message": "Brukeren ble ikke funnet"}
+            
+            user = dict(user)
+            user['status'] = 'success'
+            user['message'] = 'get_userdata_from_db SUCCEEDED'
+            return user
+            
     except Exception as e:
-        print(e)
-        return {"status": "failed", "message": str(e)}
-
-    finally:
-        if conn:
-            conn.close()
+        print(Fore.RED+f"get_userdata_from_db FAILED: {e}")
+        return {"status": "failed", "message": "Vi har for tiden probelemer med systemet vårt. Venligst prøv igjen senere"}
 
 
 def validate_and_return_user_data(data):
@@ -101,10 +98,8 @@ def validate_and_return_user_data(data):
     """    
     email = data['email']
     password = data['password']
-    
-    user = get_userdata_from_db('email', email)
-    print(user)
 
+    user = get_userdata_from_db('email', email)
     if user["status"] == "failed":
         return user
    
@@ -124,68 +119,70 @@ def validate_and_return_user_data(data):
 
 
 def get_project_data_from_db(user_id):
-    try:
-        conn = sqlite3.connect('userdata.db')
-        conn.row_factory = sqlite3.Row
-        cur = conn.cursor()
-
-        # Fetch project details
-        cur.execute("""SELECT * FROM Projects WHERE user_id = ?""", (user_id,))
-        projects = cur.fetchall()
-        
-        if not projects:
-            print('No project data found!')
-            return []
-
-        project_data  = [dict(project) for project in projects]
-        for project in project_data:
-            get_product_data(project, conn)
-
-        print('emission_factors_added')
-        return project_data
-    
-    except Exception as e:
-        print(f"get_project_data_from_db: Failed to connect to db or execute query: {e}")
-        return []
-    
-    finally:
-        if conn:
-            conn.close()
-
-
-def add_project_to_db(data):
-    """Args: ['user_id', 'name', 'type', 'bta', 'prosjektstart', 'analyseperiode', 'address', 
-    'created_date', 'updated_date', 'active', AND (Optional) 'projects']"""
-
-    # TODO: SJEKK OM JEG TRENGER DENNE KODEN
-    # user_data = get_userdata_from_db('user_id', user_id)
-    # if user_data["status"] == "failed":
-    #     print(f'add_project_to_db FAILED for: {data["name"]}. User_id not found')
-    #     return {"status": "failed"}
-
+    """Retrieves all project data for a given user_id from the database.
+    Converts the project rows into dictionaries and fetches associated product data for each project.
+    Returns a list of dictionaries containing project data.
+    """
     try:
         with sqlite3.connect('userdata.db') as conn:
+            conn.row_factory = sqlite3.Row
+            cur = conn.cursor()
+
+            # Fetches project details
+            cur.execute("""SELECT * FROM Projects WHERE user_id = ?""", (user_id,))
+            projects = cur.fetchall()
+            
+            if not projects:
+                print(Fore.RED+f'No project data found for user_id: {user_id}')
+                return []
+
+            # Converts to dict, appends list of product data, and returns the result
+            project_data  = [dict(project) for project in projects]
+            for project in project_data:
+                get_product_data(project, conn)
+                print(Fore.GREEN+f'project_data added for user_id: {user_id}, project_id: {project['project_id']}')
+            return project_data
+    
+    except Exception as e:
+        print(Fore.RED+f"get_project_data_from_db: Failed to connect to db or execute query: {e}")
+        return []
+
+
+def add_project_to_db(project_data):
+    """Adds a new project to the db table Projects
+    Params: ['user_id', 'name', 'type', 'bta', 'prosjektstart', 'analyseperiode', 'address', 
+    'created_date', 'updated_date', 'active', AND (Optional) 'projects']
+    Returns an updated project_data-dict including a status message indicating success or failure.
+    """ 
+    try:
+        with sqlite3.connect(USERDATA) as conn:
             cur = conn.cursor()
             cur.execute("""
                 INSERT INTO Projects (user_id, name, type, bta, prosjektstart, analyseperiode, address, created_date, updated_date, active)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
-                data['user_id'], data['name'], data['type'], data['bta'], data['prosjektstart'],
-                data['analyseperiode'], data['address'], data['created_date'], data['updated_date'], data['active']
+                project_data['user_id'], project_data['name'], project_data['type'], project_data['bta'], 
+                project_data['prosjektstart'], project_data['analyseperiode'], project_data['address'], 
+                project_data['created_date'], project_data['updated_date'], project_data['active']
             ))
-            # TODO: SE UNDER
-            # project_id = cur.lastrowid
+            project_data['project_id'] = cur.lastrowid
 
-            if 'products' in data:
-                for product in data['products']:
-                    print(product) # TODO: SJEKK OM PROJECT_ID KOMMER MED; ELLERS -> product['project_id'] = project_id
-                    add_product_to_db(product)
+            # If the prodject contains products (eg. is a copy); add products to db and update its products property
+            if 'products' in project_data:
+                updated_products = []
+                for product in project_data['products']:
+                    product['project_id'] = project_data['project_id']
+                    product_data = add_product_to_db(product, conn)
+                    updated_products.append(product_data)
+                    print(f'Added product_id: {product_data['product_id']}') 
+                project_data['products'] = updated_products
 
-            print(f'add_project_to_db SUCCEEDED for: {data["name"]}')
-            return {'project_id': cur.lastrowid, "status": "success"}
+            conn.commit()
+            print(Fore.GREEN+f'add_project_to_db SUCCEEDED for user_id: {project_data['user_id']}, project name: {project_data["name"]}')
+            return {'project_id': project_data['project_id'], "status": "success", 'data': project_data}
 
     except Exception as e:
-        print(f'add_project_to_db FAILED for: {data["name"]}. Error: {e}')
+        print(Fore.RED+f'add_project_to_db FAILED for: {project_data["name"]}. Error: {e}')
         return {"status": 'failed', "message": f"DB Error: {e}"}
 
 
@@ -205,68 +202,71 @@ def update_project_date(conn, project_id):
         """, (formatted_date, project_id))
 
     except Exception as e:
-        print(f"update_project_date prints: Failed to connect to db or execute query: {e}")
+        print(Fore.RED+f"update_project_date prints: Failed to connect to db or execute query: {e}")
 
 
 def update_project_data(project_data):
+    """Updates the project data of a given project.
+    Paras: project_data the data that will replace the existing data
+    Returns a status message indicating success or failure.
+    """
     try:
-        conn = sqlite3.connect('userdata.db')
-        cur = conn.cursor()
+        with sqlite3.connect('userdata.db') as conn:
+            cur = conn.cursor()
 
-        # Update the project details in the Projects table
-        cur.execute("""
-            UPDATE Projects
-            SET user_id = ?, name = ?, type = ?, bta = ?, prosjektstart = ?, 
-            analyseperiode = ?, address = ?, created_date = ?, updated_date = ?, active = ?
-            WHERE project_id = ?
-        """, (
-            project_data['user_id'], project_data['name'], project_data['type'],
-            project_data['bta'], project_data['prosjektstart'], project_data['analyseperiode'],
-            project_data['address'], project_data['created_date'], project_data['updated_date'],
-            project_data['active'], project_data['project_id']
-        ))
+            # Update the project details in the Projects table
+            cur.execute("""
+                UPDATE Projects
+                SET user_id = ?, name = ?, type = ?, bta = ?, prosjektstart = ?, 
+                analyseperiode = ?, address = ?, created_date = ?, updated_date = ?, active = ?
+                WHERE project_id = ?
+            """, (
+                project_data['user_id'], project_data['name'], project_data['type'],
+                project_data['bta'], project_data['prosjektstart'], project_data['analyseperiode'],
+                project_data['address'], project_data['created_date'], project_data['updated_date'],
+                project_data['active'], project_data['project_id']
+            ))
 
-        conn.commit()
-        print(f'update_project_data SUCCEEDED for: {project_data["name"]}')
-        return {"status": "success", "message": "Project data updated successfully."}
+            # conn.commit()
+            print(Fore.GREEN+f'update_project_data SUCCEEDED for: {project_data["name"]}')
+            return {"status": "success", "message": "Project data updated successfully."}
 
     except Exception as e:
-        print(f"Failed to update project data: {e}")
+        print(Fore.RED+f"Failed to update project data: {e}")
         return {"status": "failed", "message": str(e)}
-
-    finally:
-        if conn:
-            conn.close()
 
 
 def delete_project_data(project_id):
-    """Deletes any data in 'Projects' and 'Products' with a given project_id
-    Returns 'success' if any data was found; else returns 'failed'
+    """Deletes any data in 'Projects', 'Products' and 'EmissionFactors' for a given project_id
+    Returns a status message indicating success or failure.
     """
-    print(f'delete_project_data called for {project_id}')
+    print(f'delete_project_data called for project_id: {project_id}')
     try:
-        conn = sqlite3.connect('userdata.db')
-        cur = conn.cursor()
+        with sqlite3.connect('userdata.db') as conn:
+            cur = conn.cursor()
 
-        cur.execute("DELETE FROM Projects WHERE project_id = ?", (project_id,))
-        project_rows_deleted = cur.rowcount
-        conn.commit()
+            # Retrieve the product_ids associated with the project and deletes them
+            cur.execute("SELECT product_id FROM Products WHERE project_id = ?", (project_id,))
+            product_ids = cur.fetchall()
+            for product_id in product_ids:
+                delete_product_data(product_id[0])
 
-        if project_rows_deleted > 0:
-            print(f'Delete_project_data SUCCEEDED for project ID: {project_id}')
-            print(f'Deleted {project_rows_deleted} entries from Projects')
-            return {"status": "success"}
-        else:
-            print(f'Delete_project_data FAILED: No project found with ID {project_id}')
-            return {"status": "failed"}
+            # Delete project details from Projects table
+            cur.execute("DELETE FROM Projects WHERE project_id = ?", (project_id,))
+            project_rows_deleted = cur.rowcount
+            conn.commit()
+
+            # Return status message indicating whether or not any data was deleted
+            if project_rows_deleted > 0:
+                print(Fore.GREEN+f'delete_project_data SUCCEEDED for project ID: {project_id}; entries deleted: {project_rows_deleted}')
+                return {"status": "success"}
+            else:
+                print(Fore.RED+f'delete_project_data FAILED: No project found with ID {project_id}')
+                return {"status": "failed"}
 
     except Exception as e:
-        print(f"delete_project_data: Failed to connect to db or execute query: {e}")
+        print(Fore.RED+f"delete_project_data: Failed to connect to db or execute query: {e}")
         return {"status": "failed"}
-
-    finally:
-        if conn:
-            conn.close()
 
 
 ################################################################
@@ -275,67 +275,83 @@ def delete_project_data(project_id):
 
 
 def get_product_data(project, conn):
-    # Retrieve product data for each project
-    cur = conn.cursor()
+    """Retrieves product data for each product belonging to a given project
+    Params: projects: includes minimum project_id
+    """
     try:
         # Retrieve product data for each project
+        cur = conn.cursor()
         cur.execute("SELECT * FROM Products WHERE project_id = ?", (project['project_id'],))
         products = cur.fetchall()
         project['products'] = [dict(product) for product in products]
-
-        for product in project['products']:
-            print(product)
 
         # Retrieve emission factors for each product
         for product in project['products']:
             cur.execute("SELECT * FROM EmissionFactors WHERE product_id = ?", (product['product_id'],))
             emission_factors = cur.fetchall()
-            print(emission_factors)
             product['emission_factors'] = dict(emission_factors[0]) if emission_factors else {} 
+    
+    except Exception as e:
+        print(Fore.RED+f'get_product_data FAILED: {e}')
 
     finally:
-        cur.close()
+        if cur:
+            cur.close()
        
 
-def add_product_to_db(product_details):
-    """ARG: ['bygningsdel', 'produktgruppe', 'name', 'displayedName', 'type', 'utskiftingsintervall', 'vedlikeholdsutslipp',
-      'quantity', 'unit', 'emission_factors', 'classific', 'owner', 'regNo', 'uuid', 'validUntil', 'project_id', EPD_URL]"""
+def add_product_to_db(product_data, conn=None):
+    """Params: ['bygningsdel', 'produktgruppe', 'name', 'displayedName', 'type', 'utskiftingsintervall', 'vedlikeholdsutslipp',
+        'quantity', 'unit', 'emission_factors', 'classific', 'owner', 'regNo', 'uuid', 'validUntil', 'project_id', EPD_URL]
+    Returs updated product_data
+    """
+    print(Fore.WHITE+f'add_product_to_db called for project_id {product_data['project_id']}; for product_name: {product_data['name']}')
     try:
-        with sqlite3.connect('userdata.db') as conn: # context manager
-            cur = conn.cursor()
+        # Close after excecution if the function establishes its own connection
+        close_conn = True if conn == None else False 
+        if conn is None:
+            conn = sqlite3.connect(USERDATA)
+        cur = conn.cursor()
 
-            # Insert the new product
-            cur.execute("""
-                INSERT INTO Products (project_id, quantity, unit, bygningsdel, produktgruppe, utskiftingsintervall, vedlikeholdsutslipp, type, uuid, owner, name, regNo, validUntil, classific, EPD_URL)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                product_details['project_id'], product_details['quantity'], product_details['unit'],
-                product_details['bygningsdel'], product_details['produktgruppe'], product_details['utskiftingsintervall'], 
-                product_details['vedlikeholdsutslipp'], product_details['type'], product_details['uuid'], 
-                product_details['owner'], product_details['name'], product_details['regNo'], 
-                product_details['validUntil'], product_details['classific'], product_details['EPD_URL']
-            ))
-            product_id = cur.lastrowid
+        # Insert the new product
+        cur.execute("""
+            INSERT INTO Products (project_id, quantity, unit, bygningsdel, produktgruppe, utskiftingsintervall, vedlikeholdsutslipp, type, uuid, owner, name, regNo, validUntil, classific, EPD_URL)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            product_data['project_id'], product_data['quantity'], product_data['unit'], product_data['bygningsdel'], 
+            product_data['produktgruppe'], product_data['utskiftingsintervall'], product_data['vedlikeholdsutslipp'], 
+            product_data['type'], product_data['uuid'], product_data['owner'], product_data['name'], product_data['regNo'], 
+            product_data['validUntil'], product_data['classific'], product_data['EPD_URL']
+        ))
+        product_id = cur.lastrowid
+        print(Fore.WHITE+f'add_product_to_db -> product_id: {product_id}')
 
-            # Add emission data to db and update project.updated_date for the active project
-            update_project_date(conn, product_details['project_id'])
-            add_emission_factors_to_db(conn, product_details, product_id)
-            
-            # Construct and return the added product
-            new_product = {
-                **product_details,
-                'product_id': product_id,
-                'status': 'success',
-            }
-            print(f'add_product_to_db SUCCEEDED for: {product_details["name"]}')
-            return new_product
+        # Add emission data to db and update project.updated_date for the active project
+        update_project_date(conn, product_data['project_id'])
+        add_emission_factors_to_db(conn, product_data, product_id)
+        conn.commit()
+        
+        # Construct and return the added product
+        new_product = {
+            **product_data,
+            'product_id': product_id,
+            'status': 'success',
+        }
+        print(Fore.GREEN+f'add_product_to_db SUCCEEDED for: {product_data["name"]}')
+        return new_product
 
     except Exception as e:
-        print(f"add_product_to_db: Failed to connect to db or execute query: {e}")
+        print(Fore.RED+f"add_product_to_db: FAILED to connect to db or execute query: {e}")
         return {"status": "failed"}
-
+    
+    finally:
+        if conn and close_conn:
+            conn.close()
+        
 
 def validate_product_for_update(product_id):
+    """Retrieves the project_id of the associated project and checks if it is in session
+    Returns a status message indicating success or failure.
+    """
     try:
         conn = sqlite3.connect('userdata.db')
         cur = conn.cursor()
@@ -361,75 +377,80 @@ def validate_product_for_update(product_id):
             conn.close()
 
 
-def update_product_data(product_details):
+def update_product_data(product_data):
+    """ Updates the details of a product in the database.
+    Params: product_data dictionary containing product details and updates the corresponding row in the Products table.
+    If emission factors are provided, updates them as well.
+    Returns a status message indicating success or failure.
+    """
     try:
-        conn = sqlite3.connect('userdata.db')
-        cur = conn.cursor()
+        with sqlite3.connect('userdata.db') as conn:
+            cur = conn.cursor()
 
-        # Update the product details in the Products table
-        cur.execute("""
-            UPDATE Products
-            SET project_id = ?, quantity = ?, unit = ?, bygningsdel = ?, produktgruppe = ?, 
-            utskiftingsintervall = ?, vedlikeholdsutslipp = ?, type = ?, uuid = ?, owner = ?, 
-            name = ?, regNo = ?, validUntil = ?, classific = ?, EPD_URL = ?
-            WHERE product_id = ?
-        """, (
-            product_details['project_id'], product_details['quantity'], product_details['unit'], product_details['bygningsdel'], 
-            product_details['produktgruppe'], product_details['utskiftingsintervall'], product_details['vedlikeholdsutslipp'], 
-            product_details['type'], product_details['uuid'], product_details['owner'], product_details['name'], 
-            product_details['regNo'], product_details['validUntil'], product_details['classific'], product_details['EPD_URL'],
-            product_details['product_id'] 
-        ))
-        conn.commit()
+            # Update the product details in the Products table
+            cur.execute("""
+                UPDATE Products
+                SET project_id = ?, quantity = ?, unit = ?, bygningsdel = ?, produktgruppe = ?, 
+                utskiftingsintervall = ?, vedlikeholdsutslipp = ?, type = ?, uuid = ?, owner = ?, 
+                name = ?, regNo = ?, validUntil = ?, classific = ?, EPD_URL = ?
+                WHERE product_id = ?
+            """, (
+                product_data['project_id'], product_data['quantity'], product_data['unit'], product_data['bygningsdel'], 
+                product_data['produktgruppe'], product_data['utskiftingsintervall'], product_data['vedlikeholdsutslipp'], 
+                product_data['type'], product_data['uuid'], product_data['owner'], product_data['name'], product_data['regNo'],
+                product_data['validUntil'], product_data['classific'], product_data['EPD_URL'], product_data['product_id'] 
+            ))
 
-        # Check if emission factors are provided and update them
-        if 'emission_factors' in product_details:
-            update_emission_factors(conn, product_details['product_id'], product_details['product_id'])
-        else:
-            print('update_product_data: NB! updateDate missing!!')       
+            # Check if emission factors are provided and update them
+            if 'emission_factors' in product_data:
+                update_emission_factors(conn, product_data['product_id'], product_data['product_id'])
+            else:
+                print(Fore.RED+'update_product_data: NB! updateDate missing!!')
 
-        update_project_date(conn, product_details['project_id'])
-        print(f'update_product_data SUCCEEDED for: {product_details["name"]}')
-        return {"status": "success"}
+            update_project_date(conn, product_data['project_id'])
+
+            # conn.commit()
+            print(Fore.GREEN+f'update_product_data SUCCEEDED for: {product_data["name"]}')
+            return {"status": "success"}
 
     except Exception as e:
-        print(f"update_product_data: Failed to connect to db or execute query: {e}")
+        print(Fore.RED+f"update_product_data: Failed to connect to db or execute query: {e}")
         return {"status": "failed"}
-
-    finally:
-        if conn:
-            conn.close()
 
 
 def delete_product_data(product_id):
-    """For a given product_id:
-    Deletes any data in 'EmissionFactors' and 'Products' with that product_id
-    Returns 'success' if any data was found and user has rights; else returns 'failed'
+    """Deletes any data in 'Products' and 'EmissionFactors' and with a given product_id.
+    Returns a status message indicating success or failure.
     """
+    print(f'delete_product_data called for product_id: {product_id}')
     try:
         conn = sqlite3.connect('userdata.db')
         cur = conn.cursor()
 
-        #  Delete product from both Products and EmissionFactors
-        cur.execute("DELETE FROM EmissionFactors WHERE product_id = ?", (product_id,))
-        project = cur.fetchone()  # Fetch the first row of the result
-        project_id = project[0] 
+        # Retrieves the project_id
+        cur.execute("SELECT project_id FROM Products WHERE product_id = ?", (product_id,))
+        project = cur.fetchone()
+        project_id = project[0]
 
+        #  Delete product from tables Products and EmissionFactors
+        cur.execute("DELETE FROM EmissionFactors WHERE product_id = ?", (product_id,))
         cur.execute("DELETE FROM Products WHERE product_id = ?", (product_id,))
+        products_deleted = cur.rowcount
+
         conn.commit()
 
-        # Check if deletions were successful
-        if cur.rowcount > 0:
+        # If deletions were successful; update project_date and return a success message
+        if products_deleted > 0:
             update_project_date(conn, project_id)
             message = f'Delete_product_data SUCCEEDED for product ID: {product_id}'
             return {"status": "success", "message": message}
         else:
             message = f'Delete_product_data FAILED: No product found with ID {product_id}'
-            return {"status": "success", "message": message}
+            return {"status": "failed", "message": message}
 
     except Exception as e:
-        message = f"delete_product_data: Failed to connect to db or execute query: {e}"
-        return {"status": "success", "message": message}
+        message = f"delete_product_data: FAILED to connect to db or execute query: {e}"
+        return {"status": "failed", "message": message}
 
     finally:
         if conn:
@@ -441,31 +462,41 @@ def delete_product_data(product_id):
 ################################################################
 
 
-def add_emission_factors_to_db(conn, product_details, product_id):
-     # Check if emission factors are provided and insert them
-    if 'emission_factors' not in product_details:
-        print('add_emission_factors_to_db posts: emission data missing!')
+def add_emission_factors_to_db(conn, product_data, product_id):
+    """Adds emission factors to the database for a given product.
+    If emission factors are not provided in product_data, logs a message and returns.
+    Converts emission factors to float before returning.
+    """
+    if 'emission_factors' not in product_data:
+        print(Fore.RED+'add_emission_factors_to_db: emission data missing!')
         return
     
-    emission_factors = product_details['emission_factors']
-    print(emission_factors)
+    emission_factors = product_data['emission_factors']
     
-    cur = conn.cursor()
-    cur.execute("""
-        INSERT INTO EmissionFactors (product_id, A1, A2, A3, A1A2A3, A4, C1, C2, C3, C4, D)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, (
-        product_id, 
-        emission_factors['A1'], emission_factors['A2'], emission_factors['A3'], emission_factors['A1A2A3'], 
-        emission_factors['A4'], emission_factors['C1'], emission_factors['C2'], 
-        emission_factors['C3'], emission_factors['C4'], emission_factors['D']
-    ))
+    try:
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO EmissionFactors (product_id, A1, A2, A3, A1A2A3, A4, C1, C2, C3, C4, D)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            product_id, 
+            emission_factors['A1'], emission_factors['A2'], emission_factors['A3'], emission_factors['A1A2A3'], 
+            emission_factors['A4'], emission_factors['C1'], emission_factors['C2'], 
+            emission_factors['C3'], emission_factors['C4'], emission_factors['D']
+        ))
 
-    # Convert emission factors to float before returning
-    product_details['emission_factors'] = {key: float(value) for key, value in emission_factors.items()}
+        # Convert emission factors to float before returning
+        product_data['emission_factors'] = {key: float(value) for key, value in emission_factors.items()}
+
+    except Exception as e:
+        print(Fore.RED+f"Failed to add emission factors: {e}")
+        return {"status": "failed", "message": str(e)}
 
 
 def update_emission_factors(conn, emission_factors, product_id):
+    """Updates the emission factors of a given product.
+    If an error occurs during the update, logs the error and returns a failure message.
+    """
     try:
         cur = conn.cursor()
         cur.execute("""
@@ -482,27 +513,33 @@ def update_emission_factors(conn, emission_factors, product_id):
         conn.commit()
 
     except Exception as e:
-        print(f"Failed to update emission factors: {e}")
+        print(Fore.RED+f"Failed to update emission factors: {e}")
         return {"status": "failed", "message": str(e)}
 
 
 # TESTING #
 
-def initialize_db_with_data(json_data):
-    # Assuming json_data is a dictionary already
-    for user in json_data['users']:
-        add_user_to_db(user)
+# def initialize_db_with_data(json_data):
+#     """Populates database with test-data"""
+#     for user in json_data['users']:
+#         add_user_to_db(user)
 
-    for project in json_data['projects']:
-        add_project_to_db(project)
+#     for project in json_data['projects']:
+#         add_project_to_db(project)
     
-    for product in json_data['products']:
-        add_product_to_db(product)
+#     for product in json_data['products']:
+#         add_product_to_db(product)
 
-if __name__ == '__main__':
-    # Open and read the JSON file
-    with open('data.json', 'r') as file:
-        json_data = json.load(file)  # This loads JSON data as a Python dictionary
-
-    # Pass the dictionary to the function
-    initialize_db_with_data(json_data)
+# if __name__ == '__main__':
+#     """If the file is run directly from terminal; convert the JSON file into a dict.
+#     And pass it to initialize_db_with_data()
+#     """
+#     # with open('test_data.json', 'r', encoding='utf-8') as file:
+#     #     json_data = json.load(file) 
+#     import os
+#     current_dir = os.path.dirname(os.path.abspath(__file__))
+#     json_file_path = os.path.join(current_dir, 'test_data.json')
+#     print(json_file_path)
+#     with open(json_file_path, 'r', encoding='utf-8') as file:
+#         json_data = json.load(file)
+#     initialize_db_with_data(json_data)

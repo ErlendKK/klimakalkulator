@@ -1,6 +1,7 @@
 from flask import Flask, session, jsonify, request, send_from_directory
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
+from colorama import init, Fore, Style
 import uuid
 import os
 import sys
@@ -32,6 +33,13 @@ app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='None',
 )
+
+# Enable color-coded print-messages
+init(autoreset=True)
+def color_text(data_object):
+    color = Fore.GREEN if data_object['status'] == "success" else Fore.RED
+    message = data_object['message']
+    return f"{color}+{message}{Style.RESET_ALL}"
 
 # Setup for serving static Vue App in dev/built mode
 is_frontend_built = 'built' in sys.argv
@@ -74,7 +82,7 @@ def register_user():
     submitted_data = {'name': name, 'email': email, 'password': password, 'stayLoggedIn': stay_logged_in}
 
     validation_result = validate_user_registration(submitted_data)
-    print(validation_result['message'])
+    print(color_text(validation_result))
     if validation_result['status'] != 'success':
         return jsonify(validation_result), 401
 
@@ -85,7 +93,7 @@ def register_user():
 
     # Post user data to db and return response-data to the frontend
     db_response = add_user_to_db(submitted_data)
-    print(db_response['message'])
+    print(color_text(db_response))
 
     if db_response['status'] == "success":
         updated_user_data = {k:v for k, v in db_response["user_data"].items() if k != 'password_hash'}
@@ -142,7 +150,7 @@ def validate_file(file):
 def rename_and_store_photo(photo):
     """
     Processes, renames and stores the input photo in the directory UPLOAD_FOLDER.
-    Args: photo: A Flask `FileStorage` object containing the uploaded photo.
+    Params: photo: A Flask `FileStorage` object containing the uploaded photo.
     Ensures unique filenames by attaching unique identifiers to the input filename, 
     Saves the photo in UPLOAD_FOLDER. 
     If successful; returns a string with the new filename. Otherwise; returns None.
@@ -157,7 +165,7 @@ def rename_and_store_photo(photo):
         return photo_filename
     
     except Exception as e:
-        print(f"Failed to save photo: {e}")
+        print(Fore.RED+"Failed to save photo: {e}")
         return None 
 
 
@@ -170,7 +178,7 @@ def login_user():
     """
     login_data = request.get_json()
     user_data = validate_and_return_user_data(login_data) # returns (name, email, photo_filename, and project_list)
-    print(user_data['message'])
+    print(color_text(user_data))
 
     if user_data['status'] != 'success':
         return jsonify(user_data), 401 
@@ -182,7 +190,7 @@ def login_user():
 
 def establish_session(user_data):
     """Logs in a user by establishing a user session
-    Args: user_data; contains user_id, projects, stayLoggedIn and optional photo_name
+    Params: user_data; contains user_id, projects, stayLoggedIn and optional photo_name
     Clears any existing user_data in session
     """
     session.clear()
@@ -228,11 +236,10 @@ def check_session():
 
 def get_photo_URL(user_data):
     """Retrieves the path to the users profile picture
-    Args: user_data: must contain photo_filename
+    Params: user_data: must contain photo_filename
     If successfull; returns a string with the path to the photo. Otherwise; returns None.
     """
-    print('get_photo_URL')
-    print(user_data)
+    print('get_photo_URL called')
     photo_filename = user_data.get('photo_filename', None)
     return f"{SERVER_URL}/user_data/{photo_filename}" if photo_filename else None
 
@@ -245,7 +252,7 @@ def get_photo_URL(user_data):
 @app.route('/projects/register', methods=['POST'])
 def register_project():
     """Registers a new project by adding it to the database table Projects.
-    Args: project_data: contains {'name': String, 'type': String, 'bta': Integer, 'analyseperiode': Integer, 'prosjektstart': Integer, 
+    Params: project_data: contains {'name': String, 'type': String, 'bta': Integer, 'analyseperiode': Integer, 'prosjektstart': Integer, 
     'address': String, 'created_date': String(dd.mm.yyyy), 'updated_date': String(dd.mm.yyyy), 'active': Boolean, 'user_id': Integer}
     If successful; returns updated project_data which includes a new project_id. Oterwise; returns an error-message.
     """
@@ -259,7 +266,7 @@ def register_project():
     
     # Check if input data is valid. If not, return status: failed and error-message
     validation_response = validate_project_data(project_data)
-    print(validation_response['message'])
+    print(color_text(validation_response))
     if validation_response['status'] != 'success':
         return jsonify(validation_response), 400
     
@@ -275,7 +282,7 @@ def register_project():
 
 def authenticate_user(data):
     """Validates that the user is logged in (is in session)
-    Args; data: a dict of userdata which includes the user_id to be checked.
+    Params; data: a dict of userdata which includes the user_id to be checked.
     If so; returns True. Otherwise returns False
     """
     if not data['user_id']:
@@ -290,7 +297,7 @@ def authenticate_user(data):
 
 def validate_project_data(data):
     """Validates the format, datatype and length of the mandatory inputs.
-    Args: project_data: contains {'name': String, 'type': String, 'bta': Integer, 'analyseperiode': Integer, 'prosjektstart': Integer, 
+    Params: project_data: contains {'name': String, 'type': String, 'bta': Integer, 'analyseperiode': Integer, 'prosjektstart': Integer, 
     'address': String, 'created_date': String(dd.mm.yyyy), 'updated_date': String(dd.mm.yyyy), 'active': Boolean, 'user_id': Integer}
     Returns: dict containing validation-status and message
     """
@@ -322,7 +329,7 @@ def validate_project_data(data):
 def update_project():
     """
     Updates project_data in the database table Projects
-    Args: project_data: contains {'user_id': Integer, 'project_id': Integer, 'name': String, 'type': String, 'bta': Integer, 'analyseperiode': Integer, 
+    Params: project_data: contains {'user_id': Integer, 'project_id': Integer, 'name': String, 'type': String, 'bta': Integer, 'analyseperiode': Integer, 
     'prosjektstart': Integer, 'products': List, address': String, 'created_date': String(dd.mm.yyyy), 'updated_date': String(dd.mm.yyyy), 'active': Boolean}
     Authenticates the user by verifying that the user_id is in session, and validates the content and format of the input data.
     If successful; updates the project data and returns the updated data. Otherwise; returns an error message.
@@ -337,7 +344,7 @@ def update_project():
     
     # Check if input data is valid. If not, return status: failed and error-message
     validation_response = validate_project_data(project_data)
-    print(validation_response['message'])
+    print(color_text(validation_response))
     if validation_response['status'] != 'success':
         return jsonify(validation_response), 400
 
@@ -352,7 +359,7 @@ def update_project():
 @app.route('/projects/delete/<project_id>', methods=['DELETE'])
 def delete_project(project_id):
     """Deletes the project data from the database table Projects and from session.
-    Args: project_id: stringified integer
+    Params: project_id: stringified integer
     Authenticates the user by verifying that the project_id is in session
     If successful; deletes the project from the database and the project_id from session and returns a success message. 
     Otherwise; returns an error message.
@@ -366,7 +373,7 @@ def delete_project(project_id):
     # Authenticate user by verifying that the project is in session
     if project_id not in session['project_ids']:
         message = 'Prosjekteier er ikke logget inn, eller mangler rettigheter til å slette prosjektet'
-        print(message)
+        print(Fore.RED+message)
         return jsonify({'status': 'failed', 'message': message}), 401
     
     # Remove the project from db and session, return status and message.
@@ -387,16 +394,16 @@ def delete_project(project_id):
 @app.route('/products/add', methods=['POST'])
 def add_product_to_project():
     """Adds a product to the database table Products.
-    Args: data containing 'project_id' and product data from the ecoportal product-list
+    Params: data containing 'project_id', user-generated input, and product data from the ecoportal product-list
     Authenticates the user be checking that the user_id is in session.
-    If successfull; returns an updated version of data which includes "emission_factors" (dict of floats) and unit (string)
+    If successfull; returns an updated version of data with appended product_id (int), "emission_factors" (dict of floats) and unit (string)
     Otherwise; returns an error message
     """
     data = request.get_json()
     print(data)
 
     if data['project_id'] not in session['project_ids']:
-        print('add_product_to_project: Prosjekteieren er ikke logget inn')
+        print(Fore.RED+'add_product_to_project FAILED: Prosjekteieren er ikke logget inn')
         return jsonify({'status': 'failed', 'message': 'Prosjekteieren er ikke logget inn'}), 401
 
     added_product = add_product_to_db(data)
@@ -412,20 +419,25 @@ def add_product_to_project():
 @app.route('/products/delete/<product_id>', methods=['DELETE'])
 def delete_product(product_id):
     """Deletes a product from the database table Products.
-    Args: 'product_id' (Integer)
+    Params: 'product_id' (Integer)
     Authenticates the user be checking that the project_id associated with this product_id is in session.
     If successfull; returns deletes the product from the database. Otherwise; returns an error message
     """
     # Authenticates user and validates data
     validation_result = validate_product_for_update(product_id)
     if validation_result['status'] != 'success':
-        print(validation_result['message'])
+        print(color_text(validation_result))
         code = validation_result['code']
         del validation_result['code']
         return jsonify(validation_result), code
 
-    # Returns status and message from update_product_data()
+    # Prints and returns status message from update_product_data()
     db_response = delete_product_data(product_id)
+    print(db_response)
+    status_message = f'/products/delete/{product_id}: response from delete_product_data(): {db_response['message']}'
+    status_message_dict = {'status': db_response['status'], 'message': status_message}
+    print(color_text(status_message_dict))
+    
     if db_response['status'] == 'success':
         return jsonify(db_response), 200
     else:
@@ -435,7 +447,7 @@ def delete_product(product_id):
 @app.route('/products/update', methods=['PUT'])
 def update_product():
     """Updates a product in the database table Products.
-    Args: data containing 'project_id' and product data from the ecoportal product-list
+    Params: data containing 'project_id' and product data from the ecoportal product-list
     Authenticates the user be checking that the project_id associated with this product_id is in session.
     If successfull; updates the product data. Otherwise; returns an error message
     """
@@ -445,7 +457,7 @@ def update_product():
     # Authenticates user and validates data
     validation_result = validate_product_for_update(product_data['product_id'])
     if validation_result['status'] != 'success':
-        print(validation_result['message'])
+        print(color_text(validation_result))
         code = validation_result['code']
         del validation_result['code']
         return jsonify(validation_result), code
@@ -460,7 +472,7 @@ def update_product():
 
 @app.route('/products/emission-data/<uuid>', methods=['GET'])
 def ecoportal_properties(uuid):
-    """Args: an ecoportal uuid (string)
+    """Params: an ecoportal uuid (string)
     Retrieves emission factors and reference-data from the Ecoportal API
     If successful, returns "emission_factors" (dict of floats) and "unit" (string)
     otherwise; returns an error message
@@ -481,7 +493,7 @@ def get_productlist():
     Otherwise, returns an error message.
     """
     eco_portal_response = fetch_productlist()
-    print(eco_portal_response['message'])
+    print(color_text(eco_portal_response))
 
     if eco_portal_response['status'] == 'success':
         return jsonify(eco_portal_response), 200

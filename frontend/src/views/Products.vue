@@ -176,6 +176,7 @@
         this.isUpdateModalActive = !this.isUpdateModalActive;
       },
       sortTable(entry) {
+        
         console.log(entry)
         this.sortAscending = this.currentSort === entry.body ? !this.sortAscending : false;
         this.currentSort = entry.body;
@@ -189,7 +190,7 @@
       },
 
       async handleAddModalSubmit(productData) {
-        // move the content of the product property into the root object-body and append project_id
+        // moves the content of the product property into the root object-body and append project_id
         console.log('project_id: ' + this.currentProject.project_id)
         const fullProjectData = {
             ...productData,

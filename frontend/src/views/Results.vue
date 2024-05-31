@@ -154,7 +154,6 @@
               // Total emissions for replacing materials = [number of replacements] * (production emissions + end-of-life emissions)
               const totalB4 = (this.currentProject.analyseperiode / product.utskiftingsintervall) * (totalA1A3 + totalC1C4); // unitCoversionFactor is already accounted for
               const totalB2 = this.currentProject.analyseperiode * product.vedlikeholdsutslipp * product.quantity * unitCoversionFactor;
-              console.log('totalB4: ' + totalB4)
 
               currentRow['A1-A3'] += totalA1A3;
               currentRow['A4'] += totalA4;

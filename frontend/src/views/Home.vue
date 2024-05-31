@@ -5,7 +5,7 @@
       <img src="../assets/stockphoto.jpg" loading="lazy"/>
       <h1>Velkommen til Klimakalkulatoren</h1>
 
-      <h2>Prosjekter</h2>
+      <h3>Prosjekter</h3>
       <ul>
         <li>Siden inneholder:
           <ul>
@@ -26,7 +26,7 @@
         </li>
       </ul>
 
-      <h2>Produkter</h2>
+      <h3>Produkter</h3>
       <ul>
         <li>Siden inneholder:
           <ul>
@@ -44,7 +44,7 @@
         </li>
       </ul>
 
-      <h2>Resultater</h2>
+      <h3>Resultater</h3>
       <ul>
         <li>Inneholder en tabell som sammenstiller prosjektets klimagassutslipp fordelt på bygningsdel og livssyklusstadium (iht. faser i NS 3720). Tallene kan vises som "kg CO2e", "tonn CO2e", eller "kg CO2e per m2 per år".</li>
         <li>Resultatene fremstilles også som et kakediagram som viser fordeling av utlsipp på bygingsdeler. Brukeren kan klikke-bort en eller flere bygningsdeler, for å se fordeling av de resterende utslippene.</li>

@@ -48,8 +48,14 @@
       }
     },
     methods: {
+      /*
+      // Creates/recreates the pie chart
+      // Filter out items where 'bygningsdel' is 'Totalt'
+      // Prepare chart data using filtered resultList
+      */
       initChartData() {
         this.localResultList = this.resultList.filter(item => item.bygningsdel !== 'Totalt');
+
         this.chartData = {
           labels: this.localResultList.map(item => item.bygningsdel),
           datasets: [{
