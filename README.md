@@ -12,29 +12,70 @@ git clone https://github.com/dat310-2024/Klimakalkulator.git
 ## Initier Appen
 
 ### Anbefalt (krever npm)
+
 1. Sett nåværende katalog til rot-mappen til prosjektet og skriv følgende kommandoer:
- ```sh
- cd Klimakalkulator # Sett appens rot-mappe som current directory
- npm install # Installerer nødvendige npm-pakker. Dersom du ikke har npm installert, kan dette installeres lokalt.
- npm run setup # Installerer alle dependencies for backend (se server/requirements.txt)
- npm run init-server # Setter opp backend-serveren og oppretter databasen userdata.db
- npm run test-db # Populerer databasen med testdata
- ```
+
+#### Sett appens rot-mappe som current directory
+```sh
+"cd Klimakalkulator"
+```
+
+#### Installerer nødvendige npm-pakker. Dersom du ikke har npm installert, kan dette installeres lokalt."
+```sh
+"npm install"
+```
+
+#### Installerer alle dependencies for backend (se server/requirements.txt)
+```sh
+npm run setup
+```
+
+#### Setter opp backend-serveren og oppretter databasen userdata.db
+```sh
+npm run init-server
+```
+
+#### Populerer databasen med testdata
+```sh
+npm run test-db
+```
 
 ### Alternativt
- ```sh
- cd Klimakalkulator # Sett appens rot-mappe som current directory
- pip install -r server/requirements.txt # Installer dependencies manuelt
- cd server/scripts # Naviger til root/server/scripts, og kjør filen create_db.py:
- python create_db.py # Oppretter databasen userdata.db
- python test_db.py # Populerer databasen med testdata 
- cd .. # Naviger tilbake til root/server,
- python app.py # Setter opp backend-serveren
- ```
+
+#### Sett appens rot-mappe som current directory
+```sh
+cd Klimakalkulator
+```
+
+#### Installer dependencies manuelt
+```sh
+pip install -r server/requirements.txt
+```
+
+#### Naviger til root/server/scripts, og kjør filen create_db.py
+```sh
+cd server/scripts
+python create_db.py
+```
+
+#### Populerer databasen med testdata
+```sh
+python test_db.py
+```
+
+#### Naviger tilbake til root/server
+```sh
+cd ..
+```
+
+#### Setter opp backend-serveren
+```sh
+"python app.py
+```
 
 
-## Åpne applikasjonen
-Åpne http://127.0.0.1:5000/ i nettleseren din.
+### Åpne applikasjonen
+Åpne http://127.0.0.1:5000/ i nettleseren.
 
 
 # Server API

@@ -1,5 +1,4 @@
 import sqlite3
-import json
 from flask import session
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
@@ -17,6 +16,7 @@ def get_db_path():
     if os.getcwd().endswith('server'):
         server_dir = os.getcwd()
     return os.path.join(server_dir, 'userdata.db')
+
 USERDATA = get_db_path()
 
 ################################################################
