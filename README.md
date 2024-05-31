@@ -9,38 +9,29 @@ Serversiden er skrevet i Flask.py, med en sqlite database ("userdata.db"), som b
 git clone https://github.com/dat310-2024/Klimakalkulator.git
 ```
 
-## Anbefalt (krever npm)
+## Initier Appen
+
+### Anbefalt (krever npm)
 1. Sett nåværende katalog til rot-mappen til prosjektet og skriv følgende kommandoer:
  ```sh
- cd Klimakalkulator
+ cd Klimakalkulator # Sett appens rot-mappe som current directory
  npm install # Installerer nødvendige npm-pakker. Dersom du ikke har npm installert, kan dette installeres lokalt.
  npm run setup # Installerer alle dependencies for backend (se server/requirements.txt)
  npm run init-server # Setter opp backend-serveren og oppretter databasen userdata.db
  npm run test-db # Populerer databasen med testdata
  ```
 
-## Alternativt
-1. Installer dependencies manuelt:
+### Alternativt
  ```sh
- pip install -r server/requirements.txt
- ```
-
-2. Naviger til root/server/scripts, og kjør filen create_db.py:
- ```sh
- cd server/scripts
+ cd Klimakalkulator # Sett appens rot-mappe som current directory
+ pip install -r server/requirements.txt # Installer dependencies manuelt
+ cd server/scripts # Naviger til root/server/scripts, og kjør filen create_db.py:
  python create_db.py # Oppretter databasen userdata.db
- ```
-
-3. Naviger tilbake til root/server, og kjør filen app.py:
- ```sh
- cd ..
+ python test_db.py # Populerer databasen med testdata 
+ cd .. # Naviger tilbake til root/server,
  python app.py # Setter opp backend-serveren
  ```
 
-4. Fra samme mappe, kjør filen handle_db.py:
- ```sh
- python handle_db.py # Populerer databasen med testdata
- ```
 
 ## Åpne applikasjonen
 Åpne http://127.0.0.1:5000/ i nettleseren din.
