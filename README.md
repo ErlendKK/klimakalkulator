@@ -1,15 +1,15 @@
-Appen er et enkelt regneprogram for klimagassberegninger i bygningsprosjekter.
+Kalkulator for klimagassberegninger i bygningsprosjekter.
 
 Serversiden er skrevet i Flask.py, med en sqlite database ("userdata.db"), som består av 4 tabeller "Users", "Projects", "Products", og "EmissionFactors". Produktdata, inkl. utlsippsfaktorer, hentes fra API-en til Eco Portal.
 
 # Installasjon
 
-### Last ned repoet
+#### Last ned repoet
 ```sh
 git clone https://github.com/dat310-2024/Klimakalkulator.git
 ```
 
-### Initier Appen (krever npm)
+### Anbefalt Installasjon (krever npm)
 
 #### Sett appens rot-mappe som current directory
 ```sh
@@ -31,7 +31,7 @@ npm run init-server
 npm run test-db
 ```
 
-### Alternativ initiering
+### Alternativ installasjon
 
 #### Sett appens rot-mappe som current directory
 ```sh
