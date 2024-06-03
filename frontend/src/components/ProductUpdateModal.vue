@@ -4,7 +4,7 @@
       
       <div class="mb-3 row">
         <!-- Dropdown menu for selecting bygningsdel -->
-        <div class="col-md-6">
+        <div class="col-sm-6">
           <label for="bygningsdel-update-dropdown" class="form-label">Bygningsdel</label>
           <select id="bygningsdel-update-dropdown" class="form-control" 
             v-model="newProduct.bygningsdel" required 
@@ -23,7 +23,7 @@
         </div>
 
         <!-- Dropdown menu for selecting produktgruppe -->
-        <div class="col-md-6">
+        <div class="col-sm-6">
           <label for="produktgruppe-update-dropdown" class="form-label">Produktgruppe</label>
           <template v-if="newProduct.bygningsdel !== ''">
             <select id="produktgruppe-update-dropdown" class="form-control" 
@@ -48,7 +48,7 @@
 
       <div class="mb-3 row">
         <!-- Dropdown menu for selecting product type -->
-        <div class="col-md-6">
+        <div class="col-sm-6">
           <label for="materialtypevalg-update-dropdown" class="form-label">Material</label>
           <select id="materialtypevalg-update-dropdown" class="form-control" 
               v-model="newProduct.type" required 
@@ -67,7 +67,7 @@
         </div>
         
         <!-- Dropdown menu for selecting product -->
-        <div class="col-md-6" 
+        <div class="col-sm-6" 
           v-if="ecoPortalStatus === 'success' && filteredProducts.length">
           <label for="produktvalg-update-dropdown" class="form-label">Produkt</label>
           <template v-if="newProduct.EPD_URL">
@@ -90,7 +90,7 @@
             </option>
           </select>
         </div>
-        <div class="col-md-6" v-else>
+        <div class="col-sm-6" v-else>
           <label for="produktvalg-update-placeholder" class="form-label">Produkt</label>
           <button class="btn btn-block loading-spinner" type="button" disabled>
             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -135,14 +135,14 @@
 
       <div class="mb-3 row">
         <!-- Input form for utskiftingsintervall -->
-        <div class="col-md-6" v-if="ecoPortalStatus === 'success' && filteredProducts.length">
+        <div class="col-sm-6" v-if="ecoPortalStatus === 'success' && filteredProducts.length">
           <label for="utskiftingsintervall-update-input" class="form-label">Utskiftingsintervall</label>
           <input type="number" class="form-control" id="utskiftingsintervall-update-input" 
             v-model="newProduct.utskiftingsintervall" 
             placeholder="50"
             required>
         </div>
-        <div class="col-md-6" v-else>
+        <div class="col-sm-6" v-else>
           <label for="utskiftingsintervall-loading-placeholder" class="form-label">Utskiftingsintervall</label>
           <button class="btn btn-block loading-spinner" type="button" disabled>
             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -151,14 +151,14 @@
         </div>
 
         <!-- Input form for vedlikeholdsutslipp -->
-        <div class="col-md-6" v-if="ecoPortalStatus === 'success' && filteredProducts.length">
+        <div class="col-sm-6" v-if="ecoPortalStatus === 'success' && filteredProducts.length">
           <label for="vedlikeholdsutslipp-update-input" class="form-label">Årlige Vedlikeholdsutslipp</label>
           <input type="number" class="form-control" id="vedlikeholdsutslipp-update-input" 
             v-model="newProduct.vedlikeholdsutslipp" 
             placeholder="0"
             required>
         </div>
-        <div class="col-md-6" v-else>
+        <div class="col-sm-6" v-else>
           <label for="vedlikeholdsutslipp-loading-placeholder" class="form-label">Årlige Vedlikeholdsutslipp</label>
           <button class="btn btn-block loading-spinner" type="button" disabled>
             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>

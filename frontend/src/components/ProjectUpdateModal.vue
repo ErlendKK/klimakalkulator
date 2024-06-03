@@ -4,7 +4,7 @@
         
       <div class="mb-3 row">
         <!-- Input form for prosjektnavn -->
-        <div class="col-md-6">
+        <div class="col-sm-6">
           <label for="prosjektnavn-input" class="form-label">Prosjektnavn</label>
           <input 
             type="text" 
@@ -17,7 +17,7 @@
         </div>
 
         <!-- Input form for addresse -->
-        <div class="col-md-6">
+        <div class="col-sm-6">
           <label for="prosjektaddress-input" class="form-label">Adresse</label>
           <input 
             type="text" 
@@ -32,7 +32,7 @@
 
       <div class="mb-3 row">
         <!-- Input form for areal (BTA) -->
-        <div class="col-md-6 col-sm-4">
+        <div class="col-sm-6">
           <label for="prosjektbta-input" class="form-label">Bruttoareal (BTA)</label>
           <input 
             type="number" 
@@ -46,7 +46,7 @@
         </div>
 
         <!-- Dropdown menu for selecting bygningskategori -->
-        <div class="col-md-6">
+        <div class="col-sm-6">
           <label for="bygningskategori-dropdown" class="form-label">Bygningskategori</label>
           <select id="bygningskategori-dropdown" class="form-control" v-model="newProject.type" required>
             <option disabled value="">Velg Kategori</option>
@@ -62,7 +62,7 @@
 
       <div class="mb-3 row">
         <!-- Input form for Prosjektstart -->
-        <div class="col-md-6">
+        <div class="col-sm-6">
           <label for="prosjektstart-input" class="form-label">Prosjektstart (år)</label>
           <input 
             type="text" 
@@ -76,7 +76,7 @@
         </div>
 
         <!-- Input form for Analyseperiode -->
-        <div class="col-md-6 col-sm-4">
+        <div class="col-sm-6">
           <label for="analyseperiode-input" class="form-label">Analyseperiode (år)</label>
           <input 
             type="number" 

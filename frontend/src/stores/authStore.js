@@ -73,7 +73,6 @@ export const useAuthStore = defineStore('auth', {
           // updated_product = this.projects?.find(p => p.project_id === currentProject.project_id);
           this.currentProject.updated_date = getTodaysDate();
       }
-      console.log(this.currentProject)
     },
     popFromProducts(product_id) {
       console.log(`popFromProducts called for id: ${product_id}`);

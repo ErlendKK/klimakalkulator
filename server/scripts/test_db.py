@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+from colorama import Fore
 
 # Get the absolute path of the current directory and append the parent directory to sys.path
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -25,8 +26,12 @@ if __name__ == '__main__':
     """Convert the JSON file into a dict.
     And pass it to add_test_data_to_db()
     """
-    json_file_path = os.path.join(current_dir, 'test_data.json')
-    print(json_file_path)
-    with open(json_file_path, 'r', encoding='utf-8') as file:
-        json_data = json.load(file) 
-    add_test_data_to_db(json_data)
+    try:
+        json_file_path = os.path.join(current_dir, 'test_data.json')
+        print(json_file_path)
+        with open(json_file_path, 'r', encoding='utf-8') as file:
+            json_data = json.load(file) 
+        add_test_data_to_db(json_data)
+        
+    except Exception as e:
+        print(Fore.RED+f"test_db.py FAILED: {e}")

@@ -42,13 +42,13 @@ def color_text(data_object):
     return f"{color}+{message}{Style.RESET_ALL}"
 
 # Setup for serving static Vue App in dev/built mode
-is_frontend_built = 'built' in sys.argv
-if is_frontend_built:
-    CORS(app, supports_credentials=True) # Allow all origins
-    print("Running with built frontend...")
-else:
+is_frontend_dev_server = 'dev_server' in sys.argv
+if is_frontend_dev_server:
     CORS(app, supports_credentials=True, origins=VUE_DEV_SERVER)
-    print("Running in development mode...")
+    print(Fore.LIGHTGREEN_EX+"Running with dev_server frontend...")
+else:
+    CORS(app, supports_credentials=True) # Allow all origins
+    print(Fore.LIGHTGREEN_EX+"Running with built frontend...")
 
 # Base routing-function for built app
 @app.route('/', defaults={'path': ''})
@@ -80,6 +80,7 @@ def register_user():
     password = request.form['password']
     stay_logged_in = request.form['stayLoggedIn']
     submitted_data = {'name': name, 'email': email, 'password': password, 'stayLoggedIn': stay_logged_in}
+    print(submitted_data)
 
     validation_result = validate_user_registration(submitted_data)
     print(color_text(validation_result))
@@ -365,13 +366,14 @@ def delete_project(project_id):
     Otherwise; returns an error message.
     """
     # Convert project_id to int, to fit the expectation of delete_project_data()
+    print(project_id)
     try:
         project_id = int(project_id)
     except ValueError:
         return jsonify({'status': 'failed', 'message': 'Ugyldig prosjekt ID'}), 400
     
     # Authenticate user by verifying that the project is in session
-    if project_id not in session['project_ids']:
+    if 'project_ids' not in session or project_id not in session['project_ids']:
         message = 'Prosjekteier er ikke logget inn, eller mangler rettigheter til å slette prosjektet'
         print(Fore.RED+message)
         return jsonify({'status': 'failed', 'message': message}), 401

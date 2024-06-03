@@ -4,7 +4,7 @@
 
       <div class="mb-3 row">
         <!-- Dropdown menu for selecting bygningsdel -->
-        <div class="col-md-6 ">
+        <div class="col-sm-6 ">
           <label for="bygningsdel-dropdown" class="form-label">Bygningsdel</label>
           <select id="bygningsdel-dropdown" class="form-control" v-model="newProduct.bygningsdel" required>
             <option disabled class="dropdown-header" value="">Velg bygningsdel</option>
@@ -18,7 +18,7 @@
         </div>
 
         <!-- Dropdown menu for selecting produktgruppe -->
-        <div class="col-md-6">
+        <div class="col-sm-6">
           <label for="produktgruppe-dropdown" class="form-label">Produktgruppe</label>
           <select id="produktgruppe-dropdown" class="form-control" v-model="newProduct.produktgruppe" ref="produktgruppeDropdown" required>
             <template v-if="newProduct.Bygningsdel !== ''">
@@ -39,7 +39,7 @@
 
       <div class="mb-3 row">
         <!-- Dropdown menu for selecting product type -->
-        <div class="col-md-6">
+        <div class="col-sm-6">
           <label for="materialtypevalg-dropdown" class="form-label ">Produkttype</label>
           <select id="materialtypevalg-dropdown" class="form-control" v-model="newProduct.type" required>
             <template v-if="ecoPortalStatus === 'success' && ecoPortalData.length">
@@ -55,7 +55,7 @@
         </div>
 
         <!-- Dropdown menu for selecting product -->
-        <div class="col-md-6">         
+        <div class="col-sm-6">         
           <label for="produktvalg-dropdown" class="form-label">Produkt</label>
           <template v-if="newProduct.product.EPD_URL">
             <a :href="newProduct.product.EPD_URL" target="_blank" rel="noopener noreferrer"><i class="bi bi-link epd-link"></i></a>
@@ -108,7 +108,7 @@
 
       <div class="mb-3 row">
         <!-- Input form for utskiftingsintervall -->
-        <div class="col-md-6">
+        <div class="col-sm-6">
           <label for="utskiftingsintervall-input" class="form-label">Utskiftingsintervall</label>
           <input 
             type="number" 
@@ -120,7 +120,7 @@
         </div>
 
           <!-- Input form for vedlikeholdsutslipp -->
-        <div class="col-md-6">
+        <div class="col-sm-6">
           <label for="vedlikeholdsutslipp-input" class="form-label">Årlige Vedlikeholdsutslipp</label>
           <input 
             type="number" 

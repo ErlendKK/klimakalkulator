@@ -71,7 +71,7 @@
                 <i class="bi bi-person-circle rounded-circle profile-picture"></i>
               </a>
             </template>
-            <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+            <ul class="dropdown-menu">
               <li v-for="item in dropDownMenuItems" :key="item" >
                 <a v-if="item.displayed" class="dropdown-item" href="#" @click="item.onClick()">{{item.title}}</a>
               </li>
@@ -160,6 +160,7 @@
       */
       dropDownMenuItems() { 
         return [
+          // {title: 'Logg ut', displayed: this.isLoggedInComputed, onClick: () => null},
           {title: 'Logg ut', displayed: this.isLoggedInComputed, onClick: () => this.logOut()},
           {title: 'Registrer', displayed: !this.isLoggedInComputed, onClick: () => this.toggleRegistrationModal()},
           {title: 'Logg in', displayed: !this.isLoggedInComputed, onClick: () => this.toggleLoginModal(), },

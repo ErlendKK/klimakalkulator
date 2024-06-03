@@ -40,3 +40,8 @@ export default {
   }
 }
 </script>
+<style>
+  modal {
+    position: absolute;
+  }
+</style>

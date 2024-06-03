@@ -139,7 +139,7 @@ Inndata for brukerpålogging oppgis gjennom et skjema i et Bootstrap-modalvindu 
 * "Rediger" som åpner komponenten ProjectUpdateModal
 * "Lag kopi" som lager en kopi av prosjektet. Dersom dette er første kopi, legges tallet (1) til på slutten av prosejktnavnet. For ytterligere kopier inkrementeres dette tallet. Prosjektdata for det kopierte prosjektet sendes til serveren (/projects/register) og valideres på samme måte som nye prosjekter. Ved vellykket validering legges prosjektet til i tabellen Projects.
 * "Arkiver" (for aktive prosjekt) eller "Aktiver" (for akriverte prosjekt): toggler prosjektet-objektets 'active'-property. Arkiverte prosjekter skjules fra tabellen, med mindre slideren 'Vis arkiverte prosjekter' er aktivert. Forsøk på å åpne et arkivert prosjekt resulterer i en advarsel om at prosjektet er arkivert.
-* Slett: sender en DELETE request til serveren. Serveren returnerer et JSON-objekt med egenskapene "status" og "message". Dersom "status" = "success", så slettes også prosjektet fra global state på serversiden og en melding om dette vises. Ellers vises en feilmelding basert på innholdet i "message".
+* Slett: sender en DELETE request til serveren. Serveren returnerer et JSON-objekt med egenskapene "status" og "message". Dersom "status" = "success", så slettes også prosjektet fra global state på klientsiden og en melding om dette vises. Ellers vises en feilmelding basert på innholdet i "message".
 
 ### Produktoversikt (visning: /products)
 - Dersom brukeren ikke er logget inn, eller ingen prosjekt er aktive, viser siden en beskjed om dette. Ellers vises en side som lar brukeren administrere produktene i det aktive prosjekt.
@@ -148,7 +148,7 @@ Inndata for brukerpålogging oppgis gjennom et skjema i et Bootstrap-modalvindu 
 - Hvert tabell-rad inneholder en dropdown-meny, markert med tre prikker, med valgene:
 * "Rediger" som åpner komponenten ProductUpdateModal.
 * "Lag kopi" som lager en kopi av produktet. Prosjektdata for det kopierte produktet sendes til serveren (/products/add) og valideres på samme måte som nye produkter. Ved vellykket validering legges prosjektet til i tabellen Projects.
-* Slett: sender en DELETE request til serveren. Serveren returnerer et JSON-objekt med egenskapene "status" og "message". Dersom "status" = "success", så slettes også produktet fra global state på serversiden og en melding som bekrefter slettingen vises. Ellers vises en feilmelding basert på innholdet i "message".
+* Slett: sender en DELETE request til serveren. Serveren returnerer et JSON-objekt med egenskapene "status" og "message". Dersom "status" = "success", så slettes også produktet fra global state på klientsiden og en melding som bekrefter slettingen vises. Ellers vises en feilmelding basert på innholdet i "message".
 
 ### Resultater (visning: /results)
 - Inneholder en tabell som sammenstiller prosjektets klimagassutslipp fordelt på bygningsdel og livssyklusstadium (iht. faser i NS 3720). Tallene kan vises som "kg CO2e", "tonn CO2e", eller "kg CO2e per m2 per år".
