@@ -174,7 +174,6 @@
     </form>
   </ModalComponent>
 </template>
-
     
 <script>
   import ModalComponent from '../components/ModalComponent.vue';
@@ -184,7 +183,6 @@
   import { useAuthStore } from '../stores/authStore';
   import { displayErrorToast } from '../utils/toasts.js'
   import cloneDeep from 'lodash/cloneDeep';
-
     
   export default {
     name: 'ProductUpdateModal',

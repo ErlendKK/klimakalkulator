@@ -161,6 +161,7 @@
         bygningsdelsNavn: bygningsdeler.map(item => `${item.bygningsdel} (${item.nummer})`),
         bygningsdeler: bygningsdeler,
         materialTyper: ['Alle'],
+
         newProduct: {
           'bygningsdel': '',
           'produktgruppe': '',
@@ -173,6 +174,7 @@
           "quantity": 0,
           "unit": '',
         },
+        
         searchQuery: '',
         ecoPortalData: [],
         ecoPortalStatus: 'idle',

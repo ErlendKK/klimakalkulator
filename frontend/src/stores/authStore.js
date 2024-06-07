@@ -4,21 +4,25 @@ import { getTodaysDate } from '../utils/misc.js'
 
 
 export const useAuthStore = defineStore('auth', {
+
+  /**
+   * Global state
+   */
   state: () => ({
     isLoggedIn: false,
     user: null,
-    userName: '',
     projects: [],
     currentProject: null
   }),
   actions: {
 
-    // Handle User state
+    /**
+     * Handle User state
+     */
     logIn(user) {
       console.log(user);
       this.isLoggedIn = true;
       this.user = user;
-      this.userName = user.name;
       this.projects = user.projects;
       return true;
     },
@@ -27,7 +31,6 @@ export const useAuthStore = defineStore('auth', {
 
       this.isLoggedIn = false;
       this.user = null;
-      this.userName = '';
       this.projects = [];
       this.currentProject = null;
     },
@@ -43,11 +46,12 @@ export const useAuthStore = defineStore('auth', {
       } else {
         this.isLoggedIn = false;
         this.user = null;
-        this.userName = '';
       }
     },
 
-    // Handle Project state
+    /**
+     * Handle Project state
+     */
     setCurrentProject(project) {
       this.currentProject = project;
       console.log('setCurrentProject: ', this.currentProject.name);
@@ -65,7 +69,9 @@ export const useAuthStore = defineStore('auth', {
       this.projects = this.projects.filter(p => p.project_id !== project_id);
     },
 
-    // Handle Product state
+    /**
+     * Handle Product state
+     */
     pushToProducts(product) {
       console.log(`pushToProducts called for id: ${product.product_id}`);
       if (this.currentProject) {

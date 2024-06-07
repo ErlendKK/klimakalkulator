@@ -11,6 +11,7 @@
           id="login-email-input" 
           v-model="loginInfo.email" 
           pattern=".+@[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*\.[a-zA-Z]+$"
+          title="Eposten må ha format bruker@domene.tld"
           placeholder="Oppgi Epost">
       </div>
 
@@ -104,6 +105,7 @@
           displayWarningToast("Feil epost eller passord");
           return;
         }
+        console.log(user)
 
         displaySuccessToast(`Velkommen ${user.name}`);
         this.logIn(user);

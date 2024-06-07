@@ -78,7 +78,7 @@ def register_user():
     name = request.form['name']
     email = request.form['email']
     password = request.form['password']
-    stay_logged_in = request.form['stayLoggedIn']
+    stay_logged_in = request.form['stayLoggedIn'] == 'true'  # Convert to boolean
     submitted_data = {'name': name, 'email': email, 'password': password, 'stayLoggedIn': stay_logged_in}
     print(submitted_data)
 
@@ -178,7 +178,11 @@ def login_user():
     Otherwise; returns an error message
     """
     login_data = request.get_json()
+    print('login_data')
+    print(login_data)
     user_data = validate_and_return_user_data(login_data) # returns (name, email, photo_filename, and project_list)
+    
+    print('user_data')
     print(color_text(user_data))
 
     if user_data['status'] != 'success':

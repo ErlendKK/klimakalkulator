@@ -259,14 +259,15 @@ def delete_project_data(project_id):
             # Return status message indicating whether or not any data was deleted
             if project_rows_deleted > 0:
                 print(Fore.GREEN+f'delete_project_data SUCCEEDED for project ID: {project_id}; entries deleted: {project_rows_deleted}')
-                return {"status": "success"}
+                return {"status": "success", "message": f"prosjektnr {project_id} er slettet"}
             else:
                 print(Fore.RED+f'delete_project_data FAILED: No project found with ID {project_id}')
-                return {"status": "failed"}
+                return {"status": "failed", "message": f"prosjektnr {project_id} ble ikke funnet"}
 
     except Exception as e:
-        print(Fore.RED+f"delete_project_data: Failed to connect to db or execute query: {e}")
-        return {"status": "failed"}
+        message = f"delete_project_data: Failed to connect to db or execute query: {e}"
+        print(Fore.RED+message)
+        return {"status": "failed", "message": message}
 
 
 ################################################################
@@ -515,31 +516,3 @@ def update_emission_factors(conn, emission_factors, product_id):
     except Exception as e:
         print(Fore.RED+f"Failed to update emission factors: {e}")
         return {"status": "failed", "message": str(e)}
-
-
-# TESTING #
-
-# def initialize_db_with_data(json_data):
-#     """Populates database with test-data"""
-#     for user in json_data['users']:
-#         add_user_to_db(user)
-
-#     for project in json_data['projects']:
-#         add_project_to_db(project)
-    
-#     for product in json_data['products']:
-#         add_product_to_db(product)
-
-# if __name__ == '__main__':
-#     """If the file is run directly from terminal; convert the JSON file into a dict.
-#     And pass it to initialize_db_with_data()
-#     """
-#     # with open('test_data.json', 'r', encoding='utf-8') as file:
-#     #     json_data = json.load(file) 
-#     import os
-#     current_dir = os.path.dirname(os.path.abspath(__file__))
-#     json_file_path = os.path.join(current_dir, 'test_data.json')
-#     print(json_file_path)
-#     with open(json_file_path, 'r', encoding='utf-8') as file:
-#         json_data = json.load(file)
-#     initialize_db_with_data(json_data)

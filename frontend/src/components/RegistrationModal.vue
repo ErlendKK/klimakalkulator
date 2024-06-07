@@ -11,8 +11,8 @@
             id="navn-input" 
             v-model="newUser.name" 
             placeholder="Oppgi Navn"
-            required
-            title="Navnet kan bare inneholde bokstaver og mellomrom">
+            title="Navn mangler"
+            required>
         </div>
 
         <!-- Input form for email -->
@@ -23,8 +23,10 @@
             class="form-control" 
             id="epost-input" 
             v-model="newUser.email" 
-            pattern=".+@[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*\.[a-zA-Z]+$"
-            placeholder="Oppgi Epost">
+            pattern="^.+@[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*\.[a-zA-Z]+$"
+            title="Svaret må formateres som epost (eks. navn@firma.no)"
+            placeholder="Oppgi Epost"
+            required>
         </div>
 
       <!-- Input form for password -->
@@ -37,7 +39,8 @@
           v-model="newUser.password" 
           placeholder="Oppgi Passord"
           pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$"
-          title="Passordet må være minst 8 tegn og inneholde minst én bokstav og ett siffer">
+          title="Passordet må bestå av minst 8 tegn og inneholde minst én bokstav og ett siffer"
+          required>
       </div>
 
       <!-- Input form for repeating password -->
@@ -49,7 +52,8 @@
           v-model="newUser.confirmPassword" 
           placeholder="Gjenta Passord"
           pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$"
-          title="Passordet må være minst 8 tegn og inneholde minst én bokstav og ett siffer">
+          title="Passordet må bestå av minst 8 tegn og inneholde minst én bokstav og ett siffer"
+          required>
       </div>
 
       <!-- Input for uploading profile picture -->
@@ -101,7 +105,6 @@
     setup() {
       const authStore = useAuthStore();
       const { logIn } = authStore;
-      
       return { logIn };
     },
     data() {
@@ -109,6 +112,7 @@
         title: "Opprett bruker",
         enheter: ['tonn', 'm3'], 
         bygningskategorier: Object.keys(klimagassreferanser),
+        
         newUser: {
           name: '',
           email: '',
@@ -148,6 +152,7 @@
           displayWarningToast(dataValidation);
           return;
         }
+        console.log(this.newUser)
 
         // Create a FormData object to store data and image-file
         const formData = new FormData();
@@ -156,10 +161,16 @@
         formData.append('password', this.newUser.password);
         formData.append('stayLoggedIn', this.newUser.stayLoggedIn);
         
-        if (this.newUser.photo && this.validatePhoto(this.newUser.photo)) {
-          formData.append('photo', this.newUser.photo, this.newUser.photo.name);
+        // Handle photo if uploaded
+        if (this.newUser.photo){
+          if (this.validatePhoto(this.newUser.photo)) {
+            formData.append('photo', this.newUser.photo, this.newUser.photo.name);
+          } else {
+            return; // cancel registration if the photo is invalid
+          }
         }
 
+        // Send userdata to server and call login 
         const db_response = await postForm(formData, '/users/register');
         if (db_response.status == 'success') {
           this.newUser = db_response.user_data;

@@ -114,15 +114,5 @@ const bygningsdeler = [
     }
   ];
 
-  const resultList = [
-    { bygningsdel: 'Grunn og fundamenter', 'A1-A3': 300, 'A4': 150, 'B4': 75, 'B5': 75, 'C': 200, total: 0, andel: '0%' },
-    { bygningsdel: 'Yttervegger', 'A1-A3': 250, 'A4': 125, 'B4': 60, 'B5': 60, 'C': 180, total: 0, andel: '0%' },
-    { bygningsdel: 'Innervegger', 'A1-A3': 220, 'A4': 110, 'B4': 55, 'B5': 55, 'C': 160, total: 0, andel: '0%' },
-    { bygningsdel: 'Dekker', 'A1-A3': 200, 'A4': 100, 'B4': 50, 'B5': 50, 'C': 150, total: 0, andel: '0%' },
-    { bygningsdel: 'Yttertak', 'A1-A3': 280, 'A4': 140, 'B4': 70, 'B5': 70, 'C': 210, total: 0, andel: '0%' },
-    { bygningsdel: 'Trapper, balkonger m.m.', 'A1-A3': 160, 'A4': 80, 'B4': 40, 'B5': 40, 'C': 120, total: 0, andel: '0%' },
-    { bygningsdel: 'Utendørs konstruksjoner', 'A1-A3': 100, 'A4': 50, 'B4': 25, 'B5': 25, 'C': 75, total: 0, andel: '0%' },
-    { bygningsdel: 'Totalt', 'A1-A3': 0, 'A4': 0, 'B4': 0, 'B5': 0, 'C': 0, total: 0, andel: '0%' }
-  ]
 
 export { klimagassreferanser, bygningsdeler };

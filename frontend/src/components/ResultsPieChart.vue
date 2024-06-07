@@ -11,7 +11,7 @@
   Chart.register(...registerables)
 
   export default {
-    name: 'BarChart',
+    name: 'ResultsPieChart',
     components: {
       PieChart
     },

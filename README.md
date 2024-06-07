@@ -63,23 +63,32 @@ python app.py
 ### Åpne applikasjonen
 Åpne http://127.0.0.1:5000/ i nettleseren.
 
+####
+Testbrukere 
+
+| Epost       | Passord      | Anbefalt for å teste appen    |
+|-------------|--------------|-------------------------------|
+| a@a.a       | aaaaaaaa     | JA                            |
+| b@b.b       | bbbbbbbb     | NEI                           |
+| c@c.c       | cccccccc     | NEI                           |
+
 
 # Server API
 
-| Endpoint                             | Metode       |
-|--------------------------------------|--------------|
-| `/users/register`                    | `POST`       |
-| `/login`                             | `POST`       |
-| `/logout`                            | `POST`       |
-| `/session`                           | `GET`        |
-| `/projects/register`                 | `POST`       |
-| `/projects/update`                   | `PUT`        |
-| `/projects/delete/<project_id>`      | `DELETE`     |
-| `/products/add`                      | `POST`       |
-| `/products/delete/<product_id>`      | `DELETE`     |
-| `/products/update`                   | `PUT`        |
-| `/products/emission-data/<uuid>`     | `GET`        |
-| `/products/list`                     | `GET`        |
+| Endpoint                                    | Metode       |
+|---------------------------------------------|--------------|
+| `/users/register`                           | `POST`       |
+| `/login`                                    | `POST`       |
+| `/logout`                                   | `POST`       |
+| `/session`                                  | `GET`        |
+| `/projects/register`                        | `POST`       |
+| `/projects/update`                          | `PUT`        |
+| `/projects/delete/<project_id>`             | `DELETE`     |
+| `/products/add`                             | `POST`       |
+| `/products/delete/<product_id>`             | `DELETE`     |
+| `/products/update`                          | `PUT`        |
+| `/products/emission-data/<uuid>`            | `GET`        |
+| `/products/list`                            | `GET`        |
 
 
 # Funksjonalitet

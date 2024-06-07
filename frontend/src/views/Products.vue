@@ -112,7 +112,7 @@
   import { postData, deleteData, updateData } from '../utils/http-requests.js'
   import { displaySuccessToast, displayErrorToast } from '../utils/toasts.js'
   import { saveToLocalStorage, getFromLocalStorage } from '../utils/local-storage.js'
-  import { setDisplayedName } from '../utils/misc.js'
+  import { setDisplayedName, sortByField } from '../utils/misc.js'
   import { useAuthStore } from '../stores/authStore';
   import { computed } from 'vue';
 
@@ -126,6 +126,9 @@
       },
 
       setup() {
+        /**
+         * Handle Global state
+         */
         const authStore = useAuthStore();
 
         const isLoggedInComputed = computed(() => authStore.isLoggedIn);
@@ -149,6 +152,7 @@
 
     data() {
       return {
+        // Table content
         tableEntries: [
           {heading: 'Bygningsdel', body: 'bygningsdel', sortable: true},
           {heading: 'Produktgruppe', body: 'produktgruppe', sortable: true},
@@ -157,16 +161,21 @@
           {heading: "Mengde", body: 'quantity', sortable: false},
           {heading: "Enhet", body: 'unit', sortable: false},
         ],
-        currentSort: '', // entry.body
-        sortAscending: true,
+        // Modal data
         isAddModalActive: false,
         isUpdateModalActive: false,
         productToBeUpdated: null,
+        // Table data
+        currentSort: '',
+        sortAscending: true,
         isCopyInProgress: false
       }
     },
 
     methods: {
+      /**
+       * Toggle modales
+       */
       toggleAddModal() {
         console.log('toggleAddModal called'); // For testing
         this.isAddModalActive = !this.isAddModalActive;
@@ -175,8 +184,12 @@
         console.log('toggleUpdateModal called'); // For testing
         this.isUpdateModalActive = !this.isUpdateModalActive;
       },
+
+      /**
+       * Sort the table by the heading indicated by currentSort and direction indicated by sortAscending
+       * Store the updated preferenses in locale storeage
+       */
       sortTable(entry) {
-        
         console.log(entry)
         this.sortAscending = this.currentSort === entry.body ? !this.sortAscending : false;
         this.currentSort = entry.body;
@@ -185,10 +198,13 @@
           sortAscending: this.sortAscending,
           currentSort: this.currentSort
         })
-        console.log(this.sortAscending)
-        console.log(this.currentSort)
+        console.log(`this.sortAscending: ${this.sortAscending}\nthis.currentSort: ${this.currentSort}`);
       },
 
+      /**
+       * Hanlders for submit events from AddModal and UpdateModal
+       * Submit to server and update global state
+       */
       async handleAddModalSubmit(productData) {
         // moves the content of the product property into the root object-body and append project_id
         console.log('project_id: ' + this.currentProject.project_id)
@@ -213,7 +229,6 @@
         displaySuccessToast('Produktet er registrert')
         this.isAddModalActive = false;
       },
-
       async handleUpdateModalSubmit(productData) {
         // Resets productToBeUpdated for next time.
         this.productToBeUpdated = null;
@@ -231,7 +246,6 @@
         displaySuccessToast('Produktet er oppdatert')
         this.isUpdateModalActive = false;
       },
-
       async deleteButtonHandler(product) {
         console.log('Deleting product:', product.name);
         const product_id = product.product_id
@@ -247,12 +261,17 @@
         this.popFromProducts(product_id);
       },
 
+      /**
+       * Hanlders for click events from the drop-down menu
+       * Submit to server and update global state
+       */
       editButtonHandler(product) {
         console.log('Editing product:', product.name);
         this.productToBeUpdated = product;
         this.toggleUpdateModal();
       },
       async copyButtonHandler(product) {
+        // isCopyInProgress is used to avoid overlapping copy events
         if (this.isCopyInProgress) {
             displayErrorToast('Kopiering pågår, venligst vent.');
             return;
@@ -267,6 +286,7 @@
         this.isCopyInProgress = false;
       }
     },
+
     mounted() {
       this.productList.forEach(product => {
         if (!product.displayedName) {
@@ -281,14 +301,9 @@
     },
     computed: {
       sortedProducts() {
-        return this.productList.sort((a, b) => {
-          const modifier = this.sortAscending === false ? 1 : -1;
-
-          if(a[this.currentSort] < b[this.currentSort]) return -1 * modifier;
-          if(a[this.currentSort] > b[this.currentSort]) return 1 * modifier;
-          return 0;
-        });
-      }
+      const modifier = this.sortAscending === false ? 1 : -1;
+      return sortByField(this.productList, this.currentSort, modifier);
+    }
     }
   };
 </script>
@@ -316,11 +331,17 @@
       padding-top: 0;
       height: 2em;
     }
-  /* Thanks to leocaseiro https://dcblog.dev/stop-bootstrap-drop-menus-being-cut-off-in-responsive-tables */
+  /* 
+    Alows dropdown menus inside table-responsive-md elements to work properly on small screens
+    - For small screens (width <= 767px): dropdown menus have a static position
+    - For small screens (width >= 768px): table-responsive elements overflow visibly => full content display
+
+    Thanks to leocaseiro https://dcblog.dev/stop-bootstrap-drop-menus-being-cut-off-in-responsive-tables  
+  */
   @media (max-width: 767px) {
     .table-responsive-md .dropdown-menu {
         position: static !important;
-        -webkit-overflow-scrolling: touch; /* Improves scrolling on touch devices */
+        -webkit-overflow-scrolling: touch; /* Enables smooth scrolling on touch screens*/
     }
   }
   @media (min-width: 768px) {

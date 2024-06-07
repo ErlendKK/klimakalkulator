@@ -115,7 +115,8 @@
   import ProjectUpdateModal from '../components/ProjectUpdateModal.vue';
   import cloneDeep from 'lodash/cloneDeep';
   import { displaySuccessToast, displayErrorToast } from '../utils/toasts.js'
-  import { postData, updateData, deleteData } from '../utils/http-requests'
+  import { postData, updateData, deleteData } from '../utils/http-requests.js'
+  import { sortByDate, sortByField } from '../utils/misc.js'
   import { saveToLocalStorage, getFromLocalStorage } from '../utils/local-storage.js'
   import { useAuthStore } from '../stores/authStore';
   import { computed } from 'vue';
@@ -130,7 +131,6 @@
       },
       setup() {
       const authStore = useAuthStore();
-
       const isLoggedInComputed = computed(() => authStore.isLoggedIn);
       const userComputed = computed(() => authStore.user);
       const projectList = computed(() => authStore.projects);
@@ -144,6 +144,7 @@
     },
     data() {
       return {
+        // Table content
         tableEntries: [
           {heading: 'Prosjektnavn', body: 'name', sortable: true},
           {heading: 'Bygningskategori', body: 'type', sortable: true},
@@ -152,16 +153,21 @@
           {heading: "Opprettet", body: 'created_date', sortable: true},
           {heading: "Sist Endret", body: 'updated_date', sortable: true},
         ],
-        displayArchived: false,
-        currentSort: '',
-        sortAscending: true,
+        // Modal data
         isAddModalActive: false,
         isUpdateModalActive: false,
         projectToBeUpdated: null,
+        // Table data
+        currentSort: '',
+        sortAscending: true,
+        displayArchived: false,
         isCopyInProgress: false
       };
     },
     methods: {
+      /**
+       * Toggle modales
+       */
       toggleAddModal() {
         console.log(`toggleAddModal called`); // For testing
         this.isAddModalActive = !this.isAddModalActive;
@@ -170,8 +176,10 @@
         console.log(`toggleUpdateModal called`); // For testing
         this.isUpdateModalActive = !this.isUpdateModalActive;
       },
-      // Update sortAscending and currentSort with the selected entry
-      // Save both to local storage
+      /**
+       * Sort the table by the heading indicated by currentSort and direction indicated by sortAscending
+       * Store the updated preferenses in locale storeage
+       */
       sortTable(entry) {
         this.sortAscending = this.currentSort === entry.body ? !this.sortAscending : false;
         this.currentSort = entry.body;
@@ -181,6 +189,23 @@
           currentSort: this.currentSort
         })
       },
+      /**
+       * Set selected project as "current project", and update global state.
+       */
+      async handleProjectSelection(project) {
+        console.log('handleProjectSelection called for: ' + project.name);
+        if (!project.active) {
+          displayErrorToast('Prosjektet er arkivert')
+          return; 
+        }
+
+        this.setCurrentProject(project);
+        this.$router.push({ path: '/products' });
+      },
+      /**
+       * Handlers for click events from the drop-down menu
+       * Submit to server and update global state
+       */
       async toggleActive(project) {
         project.active = !project.active;
         const db_response = await updateData(project, '/projects/update');
@@ -193,8 +218,11 @@
         const message = project.active ? 'Prosjektet er aktivert' : 'Prosjektet er arkivert';
         displaySuccessToast(message);
       },
-
       editButtonHandler(project) {
+        if (!project.active) {
+          displayErrorToast('Prosjektet er arkivert');
+          return;
+        }
         console.log('Editing project:', project.name);
         this.projectToBeUpdated = project;
         console.log(this.projectToBeUpdated)
@@ -246,6 +274,22 @@
         await this.handleAddProject(copiedProject);
         this.isCopyInProgress = false;   
       },
+      async handleUpdateModalSubmit(projectData) {
+        console.log(projectData)
+        const db_response = await updateData(projectData, '/projects/update');
+
+        if (db_response.status === 'failed') {
+          const message = db_response?.message ?? 'Prsjektet kunne ikke oppdateres!';
+          displayErrorToast(message);
+          return;
+        }
+        
+        this.projectToBeUpdated = null; // Resets modal
+        this.popFromProjects(projectData.project_id);
+        this.pushToProjects(projectData);
+        displaySuccessToast('Produktet er oppdatert');
+        this.isUpdateModalActive = false;
+      },
       async handleAddProject(project) {
         project.user_id = this.userComputed.user_id;
         console.log(project);
@@ -267,37 +311,12 @@
         this.pushToProjects(project); 
         this.isAddModalActive = false;
       },
-      async handleUpdateModalSubmit(projectData) {
-        console.log(projectData)
-        const db_response = await updateData(projectData, '/projects/update');
-
-        if (db_response.status === 'failed') {
-          const message = db_response?.message ?? 'Prsjektet kunne ikke oppdateres!';
-          displayErrorToast(message);
-          return;
-        }
-        
-        this.projectToBeUpdated = null; // Resets modal
-        this.popFromProjects(projectData.project_id);
-        this.pushToProjects(projectData);
-        displaySuccessToast('Produktet er oppdatert');
-        this.isUpdateModalActive = false;
-      },
-      async handleProjectSelection(project) {
-        console.log('handleProjectSelection called for: ' + project.name);
-        if (!project.active) {
-          displayErrorToast('Prosjektet er arkivert')
-          return; 
-        }
-
-        this.setCurrentProject(project);
-        this.$router.push({ path: '/products' });
-      },
     },
-
+    /**
+     * When the page loads; get sort-preferences from local storage andsort the project-table
+     */
     mounted() {
-      console.log('this.projectList')
-      console.log(this.projectList)
+      console.log(this.projectList);
       const projectsPreferences = getFromLocalStorage('projectsPreferences');
 
       this.currentSort = projectsPreferences?.currentSort ?? 'Opprettet';
@@ -309,29 +328,18 @@
         const activeProjects = this.projectList?.filter(p => p.active) ?? [];
         const localProjectList = this.displayArchived ? this.projectList : activeProjects;
         const modifier = this.sortAscending ? -1 : 1;
-        const dateEntries = ['created_date', 'updated_date']
-        const sortByDate = dateEntries.includes(this.currentSort) ? true : false;
+        
+        // Select sorting-function based on data-format
+        const isSortByDate = () => {
+          const dateEntries = ['created_date', 'updated_date'];
+          return dateEntries.includes(this.currentSort);
+        };
 
-        // If currentSort is a date: Split the date strings into components
-        // And Convert to (yyyy-mm-dd) date-format for easy comparison
-        if (sortByDate) {
-          return localProjectList.sort((a, b) => {
-
-            const [dayA, monthA, yearA] = a[this.currentSort].split(".");
-            const [dayB, monthB, yearB] = b[this.currentSort].split(".");
-            const dateA = new Date(`${yearA}-${monthA}-${dayA}`);
-            const dateB = new Date(`${yearB}-${monthB}-${dayB}`);
-
-            return (dateA - dateB) * modifier;
-          });
+        if (isSortByDate()) {
+          return sortByDate(localProjectList, this.currentSort, modifier);
+        } else {
+          return sortByField(localProjectList, this.currentSort, modifier);
         }
-
-        // Otherwise sort notmally.
-        return localProjectList.sort((a, b) => {
-          if(a[this.currentSort] < b[this.currentSort]) return -1 * modifier;
-          if(a[this.currentSort] > b[this.currentSort]) return 1 * modifier;
-          return 0;
-        });
       }
     }
   }
@@ -367,12 +375,17 @@
     padding-top: 0;
     height: 2em;
   }
+  /* 
+    Alows dropdown menus inside table-responsive-md elements to work properly on small screens
+    - For small screens (width <= 767px): dropdown menus have a static position
+    - For small screens (width >= 768px): table-responsive elements overflow visibly => full content display
 
-  /* Thanks to leocaseiro https://dcblog.dev/stop-bootstrap-drop-menus-being-cut-off-in-responsive-tables  */
+    Thanks to leocaseiro https://dcblog.dev/stop-bootstrap-drop-menus-being-cut-off-in-responsive-tables  
+  */
   @media (max-width: 767px) {
     .table-responsive-md .dropdown-menu {
         position: static !important;
-        -webkit-overflow-scrolling: touch;
+        -webkit-overflow-scrolling: touch; /* Enables smooth scrolling on touch screens*/
     }
   }
   @media (min-width: 768px) {
