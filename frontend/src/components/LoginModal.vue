@@ -42,7 +42,7 @@
       </div>
 
       <div class="btn-group" role="group">
-        <button type="submit" class="btn btn-primary btn-md">Logg Inn</button>
+        <button type="submit" class="btn btn-success btn-md">Logg Inn</button>
         <button type="button" class="btn btn-secondary btn-md" @click="handleClose('registrer')">Opprett Bruker</button>
       </div>
 

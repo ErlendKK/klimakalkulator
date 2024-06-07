@@ -5,7 +5,7 @@
       <h2>Prosjektoversikt</h2>
       <div v-if="isLoggedInComputed">
 
-        <button type="button" class="btn btn-primary toggle-modal-button" @click="toggleAddModal">Nytt Prosjekt</button>
+        <button type="button" class="btn btn-success toggle-modal-button" @click="toggleAddModal">Nytt Prosjekt</button>
         <project-add-modal
           :is-active="isAddModalActive"
           @close="isAddModalActive = false"

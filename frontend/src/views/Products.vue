@@ -7,7 +7,7 @@
       <div v-if="isLoggedInComputed && currentProject">
 
         <!-- Open productModal to add new product to the project -->
-        <button type="button" class="btn btn-primary toggle-modal-button"
+        <button type="button" class="btn btn-success toggle-modal-button"
           @click="toggleAddModal">
           Nytt Produkt
         </button>

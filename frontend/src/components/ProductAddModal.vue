@@ -134,7 +134,7 @@
       
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary btn-md" style="min-width:5em" @click="handleClose">Avbryt</button>
-        <button type="submit" class="btn btn-primary btn-md" style="min-width:8em">Legg til</button>
+        <button type="submit" class="btn btn-success btn-md" style="min-width:8em">Legg til</button>
       </div>
     </form>
   </ModalComponent>

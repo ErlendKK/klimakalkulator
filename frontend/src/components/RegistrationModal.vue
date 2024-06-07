@@ -80,7 +80,7 @@
       </div>
 
       <div class="btn-group" role="group">
-        <button type="submit" class="btn btn-primary btn-md">Opprett Bruker</button>
+        <button type="submit" class="btn btn-success btn-md">Opprett Bruker</button>
         <button type="button" class="btn btn-secondary btn-md" @click="handleClose('login')">Logg Inn</button>
       </div>
     </form>

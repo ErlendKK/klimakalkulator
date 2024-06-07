@@ -172,8 +172,10 @@
 
 <style scoped>
   header {
-    background-color:  rgb(246, 254, 240);
-    position: fixed;
+    /* background-color:  rgb(246, 254, 240); */
+    background-color: #f5f9ed;
+    /* background-color: #C0D3C2; */
+    position: fixed; 
     left: 0;
     top: 0;
     right: 0;
