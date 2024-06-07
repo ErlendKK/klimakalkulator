@@ -23,7 +23,7 @@
         
           <div class="form-check form-switch">
             <input 
-              class="form-check-input" 
+              class="form-check-input custom-switch" 
               type="checkbox" 
               role="switch" 
               id="flexSwitchCheckDefault"
@@ -374,6 +374,13 @@
     margin-top: -0.5em;
     padding-top: 0;
     height: 2em;
+  }
+  .custom-switch:checked {
+    background-color: #28a745;
+    border-color: #28a745;
+  }
+  .custom-switch:checked:focus {
+    box-shadow: 0 0 0 0.25rem rgba(40, 167, 69, 0.25);
   }
   /* 
     Alows dropdown menus inside table-responsive-md elements to work properly on small screens

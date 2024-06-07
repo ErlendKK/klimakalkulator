@@ -1,6 +1,6 @@
 <!-- Boilerplate Bootstrap Modal -->
 <template>
-  <div>
+  <div >
     <div v-if="isActive"
       class="modal fade"
       :class="{ show: isActive, 'd-block': isActive }"
@@ -40,8 +40,8 @@ export default {
   }
 }
 </script>
-<style>
-  modal {
+<style scoped>
+  .modal {
     position: absolute;
   }
 </style>
