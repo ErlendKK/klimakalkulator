@@ -50,14 +50,6 @@ else:
     CORS(app, supports_credentials=True) # Allow all origins
     print(Fore.LIGHTGREEN_EX+"Running with built frontend...")
 
-# Base routing-function for built app
-# @app.route('/', defaults={'path': ''})
-# @app.route('/<path:path>')
-# def catch_all(path):
-#     """Handles all incoming requests to the server. 
-#     Returns index-html, and lets vue router handle routing to the correct view.
-#     """
-#     return send_from_directory(VUE_STATIC_FOLDER, 'index.html')
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')

@@ -1,6 +1,6 @@
-Kalkulator for klimagassberegninger i bygningsprosjekter.
+# Regneprogram for klimagassberegninger i bygningsprosjekter.
 
-Serversiden er skrevet i Flask.py, med en sqlite database ("userdata.db"), som består av 4 tabeller "Users", "Projects", "Products", og "EmissionFactors". Produktdata, inkl. utlsippsfaktorer, hentes fra API-en til Eco Portal.
+Serversiden er skrevet i Flask.py, med en sqlite database ("userdata.db") som består av 4 tabeller "Users", "Projects", "Products", og "EmissionFactors". Produktdata (inkl. utlsippsfaktorer) hentes fra API-en til Eco Portal. Klientsiden er skrevet med Vue 3 (Options API) Single File Components med vite, vue-router, og pinia.
 
 # Installasjon
 
