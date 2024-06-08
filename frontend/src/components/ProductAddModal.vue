@@ -88,6 +88,8 @@
             id="produktmengde-input" 
             v-model="newProduct.quantity"
             placeholder="Oppgi mengde"
+            min="0.01" 
+            step="any"
             required>
         </div>
 

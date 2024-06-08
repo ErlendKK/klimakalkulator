@@ -51,6 +51,14 @@ else:
     print(Fore.LIGHTGREEN_EX+"Running with built frontend...")
 
 # Base routing-function for built app
+# @app.route('/', defaults={'path': ''})
+# @app.route('/<path:path>')
+# def catch_all(path):
+#     """Handles all incoming requests to the server. 
+#     Returns index-html, and lets vue router handle routing to the correct view.
+#     """
+#     return send_from_directory(VUE_STATIC_FOLDER, 'index.html')
+
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def catch_all(path):
@@ -80,7 +88,6 @@ def register_user():
     password = request.form['password']
     stay_logged_in = request.form['stayLoggedIn'] == 'true'  # Convert to boolean
     submitted_data = {'name': name, 'email': email, 'password': password, 'stayLoggedIn': stay_logged_in}
-    print(submitted_data)
 
     validation_result = validate_user_registration(submitted_data)
     print(color_text(validation_result))
