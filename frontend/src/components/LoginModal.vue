@@ -12,7 +12,8 @@
           v-model="loginInfo.email" 
           pattern=".+@[a-zA-Z0-9]+(\.[a-zA-Z0-9]+)*\.[a-zA-Z]+$"
           title="Eposten må ha format bruker@domene.tld"
-          placeholder="Oppgi Epost">
+          placeholder="Oppgi Epost"
+          required>
       </div>
 
       <!-- Input form for password -->
@@ -24,7 +25,8 @@
           id="login-passord-input" 
           v-model="loginInfo.password"
           minlength="8"
-          placeholder="Oppgi Passord">
+          placeholder="Oppgi Passord"
+          required>
       </div>
 
       <!-- Checkbox for staying logged in -->
