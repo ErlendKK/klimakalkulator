@@ -40,9 +40,3 @@ export default {
   }
 }
 </script>
-<style scoped>
-  .modal {
-    position: absolute;
-  }
-</style>
- 

@@ -13,7 +13,7 @@ git clone https://github.com/dat310-2024/Klimakalkulator.git
 
 #### Sett appens rot-mappe som current directory
 ```sh
-"cd Klimakalkulator"
+cd Klimakalkulator
 ```
 
 #### Installer python dependencies (se server/requirements.txt)
@@ -26,7 +26,7 @@ npm run setup
 npm run init-server
 ```
 
-#### Valgfritt: Populer databasen med testdata
+#### Valgfritt: Åpne en ny Terminal og Populer databasen med testdata
 ```sh
 npm run test-db
 ```
