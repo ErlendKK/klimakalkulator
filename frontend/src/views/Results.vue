@@ -5,62 +5,78 @@
       <h2>{{ heading }}</h2>
       <div v-if="isLoggedInComputed && currentProject">
 
-        <!-- Dropdown menu for selecting unit -->
-        <select id="selectedDataFormat-dropdown" class="form-control" 
-          v-model="selectedDataFormat" @change="handleFormatSelection"  required>
-          <option 
-            v-for="format in dataFormats"
-            :key="format" 
-            :value="format">
-            {{ format }}
-          </option>
-        </select>
+        <div class="card mb-3">
+          <div class="card-body">
 
-        <!-- Table of emission data -->
-        <div class="table-responsive">
-          <table class="table table-hover table-sm" >
-            <thead class="table-light">
-              <tr>
-                <th
-                  v-for="(key, idx) in Object.keys(resultList[0])"
-                  :key="idx"
-                  scope="col">
-                  {{ key }}
-                </th>
-              </tr> 
-            </thead>
-            <tbody>
-              <tr v-for="row in resultList.slice(0, resultList.length - 1)" 
-                :key="row.bygningsdel">
-                <td v-for="(value, key) in row" :key="key">
-                  {{ value }}
-                </td>
-              </tr>
-            </tbody>
-            <tfoot>
-              <tr>
-                <td v-for="(value, key) in resultList[resultList.length - 1]" 
-                  :key="key">
-                  {{ value }}
-                </td>
-              </tr>
-            </tfoot>
-          </table>
+            <!-- Dropdown menu for selecting unit -->
+            <select id="selectedDataFormat-dropdown" class="form-control" 
+              v-model="selectedDataFormat" @change="handleFormatSelection"  required>
+              <option 
+                v-for="format in dataFormats"
+                :key="format" 
+                :value="format">
+                {{ format }}
+              </option>
+            </select>
+
+            <!-- Table of emission data -->
+            <div class="table-responsive">
+              <table class="table table-hover table-sm" >
+                <thead class="table-light">
+                  <tr>
+                    <th
+                      v-for="(key, idx) in Object.keys(resultList[0])"
+                      :key="idx"
+                      scope="col">
+                      {{ key }}
+                    </th>
+                  </tr> 
+                </thead>
+                <tbody>
+                  <tr v-for="row in resultList.slice(0, resultList.length - 1)" 
+                    :key="row.bygningsdel">
+                    <td v-for="(value, key) in row" :key="key">
+                      {{ value }}
+                    </td>
+                  </tr>
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td v-for="(value, key) in resultList[resultList.length - 1]" 
+                      :key="key">
+                      {{ value }}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </div> <!-- End of card-body -->
 
         <!-- Display chart -->
+        <div class="card mb-3">
+          <div class="card-body">
+            <ResultsPieChart :resultList="resultList"/>
+          </div>
         </div>
-        <hr class="content-seperator">
-        <ResultsPieChart :resultList="resultList"/>
       </div>
         
-        <div v-else-if="userComputed === null">
-          <p>Logg inn for å se resultater</p>
+      <div v-else-if="userComputed === null">
+        <div class="card mb-3">
+          <div class="card-body">
+            <p>Logg inn for å se resultater</p>
+          </div>
         </div>
-        <div v-else>
-          <p><router-link to="/projects">Velg et prosjekt</router-link></p>
+      </div>
+      <div v-else>
+        <div class="card mb-3">
+          <div class="card-body">
+            <p><router-link to="/projects">Velg et prosjekt</router-link></p>
+          </div>
         </div>
-      </main>
+      </div>
 
+    </main>
     <nav-footer></nav-footer>
   </div>
 </template>
@@ -231,14 +247,14 @@
 </script>
 
 <style scoped>
+  h2 {
+      margin-bottom: 1.4rem;
+      margin-top: 0.2rem;
+  }
   .table-responsive {
     margin-top: 1.5em;
   }
   button {
       margin-bottom: 1.5em;
-  }
-  .content-seperator {
-    margin-top: 2.5em;
-    margin-bottom: 1.5em;
   }
 </style>

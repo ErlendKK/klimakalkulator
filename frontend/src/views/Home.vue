@@ -10,9 +10,9 @@
           <h3 class="card-title">Prosjekter</h3>
           <p class="card-text">Fanen inneholder:</p>
             <ul>
-              <li>en knapp for å opprette nytt prosjekt, som åpner komponenten projectAddModal;</li>
-              <li>en slider for å vise/skjule arkiverte prosjekter; og</li>
-              <li>en tabell med brukerens prosjekter.</li>
+              <li>En knapp for å opprette nytt prosjekt</li>
+              <li>En slider for å vise/skjule arkiverte prosjekter</li>
+              <li>En tabell med brukerens prosjekter</li>
             </ul>
           <p class="card-text">Tabellen kan sorteres i stigende/nedadgående rekkefølge etter valgfri kollonne, og valgt sortering lagres i localStorage og huskes neste gang brukeren logger seg på. Dersom brukeren venstre-klikker på ett av prosjektene, så åpnes produktoversikten til dette prosjektet (visning: /products).</p>
           <p class="card-text">Hvert tabell-rad inneholder en dropdown-meny, markert med tre prikker, med valgene:</p>
@@ -30,8 +30,8 @@
           <h3 class="card-title">Produkter</h3>
           <p class="card-text">Fanen inneholder:</p>
             <ul>
-              <li>en knapp for å legge til et nytt produkt, som åpner komponenten ProductAddModal;</li>
-              <li>en tabell over produktene i det aktive prosjektet.</li>
+              <li>En knapp for å legge til et nytt produkt</li>
+              <li>En tabell over produktene i det aktive prosjektet</li>
             </ul>
           <p class="card-text">Tabellen kan sorteres i stigende/nedadgående rekkefølge etter valgfri kollonne, og valgt sortering lagres i localStorage og huskes neste gang brukeren logger seg på. Hvert tabell-rad inneholder en dropdown-meny (markert med tre prikker) med valgene:</p>
           <ul>

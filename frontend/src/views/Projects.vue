@@ -3,105 +3,112 @@
     <nav-header></nav-header>
     <main class="container">
       <h2>Prosjektoversikt</h2>
-      <div v-if="isLoggedInComputed">
+      <div class="card mb-3">
+        <div class="card-body">
 
-        <button type="button" class="btn btn-success toggle-modal-button" @click="toggleAddModal">Nytt Prosjekt</button>
-        <project-add-modal
-          :is-active="isAddModalActive"
-          @close="isAddModalActive = false"
-          @submit-project="handleAddProject">
-        </project-add-modal>
+          <div v-if="isLoggedInComputed">
+            <button type="button" class="btn btn-success toggle-modal-button" @click="toggleAddModal">Nytt Prosjekt</button>
+            <project-add-modal
+              :is-active="isAddModalActive"
+              @close="isAddModalActive = false"
+              @submit-project="handleAddProject">
+            </project-add-modal>
 
-        <!-- Open productUpdateModal to add new product to the project -->
-        <project-update-modal
-          v-if="isUpdateModalActive"
-          :is-active="isUpdateModalActive"
-          :projectToBeUpdated="projectToBeUpdated"
-          @close="isUpdateModalActive = false"
-          @submit-project="handleUpdateModalSubmit">
-        </project-update-modal>
+            <!-- Open productUpdateModal to add new product to the project -->
+            <project-update-modal
+              v-if="isUpdateModalActive"
+              :is-active="isUpdateModalActive"
+              :projectToBeUpdated="projectToBeUpdated"
+              @close="isUpdateModalActive = false"
+              @submit-project="handleUpdateModalSubmit">
+            </project-update-modal>
         
-          <div class="form-check form-switch">
-            <input 
-              class="form-check-input custom-switch" 
-              type="checkbox" 
-              role="switch" 
-              id="flexSwitchCheckDefault"
-              v-model="displayArchived"
-              >
-            <label class="form-check-label" for="flexSwitchCheckDefault">Vis arkiverte Prosjekter</label>
-          </div>
+            <div class="form-check form-switch">
+              <input 
+                class="form-check-input custom-switch" 
+                type="checkbox" 
+                role="switch" 
+                id="flexSwitchCheckDefault"
+                v-model="displayArchived"
+                >
+              <label class="form-check-label" for="flexSwitchCheckDefault">Vis arkiverte Prosjekter</label>
+            </div>
 
         <!-- Table of projects -->
-        <div class="table-responsive-md">
-        <table class="table table-hover table-sm" >
-          <thead class="table-light">
-            <tr>
-              <!-- For sortable columns display sort-icon and listen for click -->
-              <th v-for="entry in tableEntries" :key="entry">
-                <template  v-if="entry.sortable">
-                  <button type="button" class="btn btn-default heading text-start text-nowrap"
-                    @click="sortTable(entry)">
-                    {{ entry.heading }}
-                    <i
-                      :class="{
-                        'fa-solid': true, 
-                        'fa-sort': entry.body !== currentSort, 
-                        'fa-sort-down': entry.body === currentSort && sortAscending, 
-                        'fa-sort-up': entry.body === currentSort && !sortAscending,
-                        'faded-icon': true 
-                      }">
-                    </i>
-                  </button>
-                </template>
-                <template  v-else>
-                  <button type="button" disabled class="btn btn-default border border-0 heading" style="padding-left: 0; font-weight: bold;">
-                  {{ entry.heading }}
-                  </button>
-                </template>
-              </th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(project, index) in sortedProjects" :key="index">
-              <td :class="{ archived: !project.active }" @click="handleProjectSelection(project)">{{ project.name }}</td>
-              <td :class="{ archived: !project.active }" @click="handleProjectSelection(project)">{{ project.type }}</td>
-              <td :class="{ archived: !project.active }" @click="handleProjectSelection(project)">{{ project.bta }}</td>
-              <td :class="{ archived: !project.active }" @click="handleProjectSelection(project)">{{ project.prosjektstart }}</td>
-              <td :class="{ archived: !project.active }" @click="handleProjectSelection(project)">{{ project.created_date }}</td>
-              <td :class="{ archived: !project.active }" @click="handleProjectSelection(project)">{{ project.updated_date }}</td>
+            <div class="table-responsive-md">
+            <table class="table table-hover table-sm" >
+              <thead class="table-light">
+                <tr>
+                  <!-- For sortable columns display sort-icon and listen for click -->
+                  <th v-for="entry in tableEntries" :key="entry">
+                    <template  v-if="entry.sortable">
+                      <button type="button" class="btn btn-default heading text-start text-nowrap"
+                        @click="sortTable(entry)">
+                        {{ entry.heading }}
+                        <i
+                          :class="{
+                            'fa-solid': true, 
+                            'fa-sort': entry.body !== currentSort, 
+                            'fa-sort-down': entry.body === currentSort && sortAscending, 
+                            'fa-sort-up': entry.body === currentSort && !sortAscending,
+                            'faded-icon': true 
+                          }">
+                        </i>
+                      </button>
+                    </template>
+                    <template  v-else>
+                      <button type="button" disabled class="btn btn-default border border-0 heading" style="padding-left: 0; font-weight: bold;">
+                      {{ entry.heading }}
+                      </button>
+                    </template>
+                  </th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(project, index) in sortedProjects" :key="index">
+                  <td :class="{ archived: !project.active }" @click="handleProjectSelection(project)">{{ project.name }}</td>
+                  <td :class="{ archived: !project.active }" @click="handleProjectSelection(project)">{{ project.type }}</td>
+                  <td :class="{ archived: !project.active }" @click="handleProjectSelection(project)">{{ project.bta }}</td>
+                  <td :class="{ archived: !project.active }" @click="handleProjectSelection(project)">{{ project.prosjektstart }}</td>
+                  <td :class="{ archived: !project.active }" @click="handleProjectSelection(project)">{{ project.created_date }}</td>
+                  <td :class="{ archived: !project.active }" @click="handleProjectSelection(project)">{{ project.updated_date }}</td>
 
-              <!-- Dropdown menu for project-rows -->
-              <td>
-                <div class="dropdown">
-                  <a class="btn ellipsis-container" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fa-solid fa-ellipsis"></i>
-                  </a>
-                  <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-                    <li><a class="dropdown-item" href="#" @click="editButtonHandler(project)">Rediger</a></li>
-                    <li><a class="dropdown-item" href="#" @click="copyButtonHandler(project)">Lag kopi</a></li>
-                    <template v-if="project.active">
-                      <li><a class="dropdown-item" href="#" @click="toggleActive(project)">Arkiver</a></li>
-                    </template>
-                    <template v-else>
-                      <li><a class="dropdown-item" href="#" @click="toggleActive(project)">Aktiver</a></li>
-                    </template>
-                    <div class="dropdown-divider"></div>
-                    <li><a class="dropdown-item" href="#" @click="deleteButtonHandler(project)">Slett</a></li>
-                  </ul>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <p class="placeholder-glow if-copying-active" v-if="isCopyInProgress">
-          <span class="placeholder col-12 if-copying-active"></span>
-        </p>
+                  <!-- Dropdown menu for project-rows -->
+                  <td>
+                    <div class="dropdown">
+                      <a class="btn ellipsis-container" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fa-solid fa-ellipsis"></i>
+                      </a>
+                      <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                        <li><a class="dropdown-item" href="#" @click="editButtonHandler(project)">Rediger</a></li>
+                        <li><a class="dropdown-item" href="#" @click="copyButtonHandler(project)">Lag kopi</a></li>
+                        <template v-if="project.active">
+                          <li><a class="dropdown-item" href="#" @click="toggleActive(project)">Arkiver</a></li>
+                        </template>
+                        <template v-else>
+                          <li><a class="dropdown-item" href="#" @click="toggleActive(project)">Aktiver</a></li>
+                        </template>
+                        <div class="dropdown-divider"></div>
+                        <li><a class="dropdown-item" href="#" @click="deleteButtonHandler(project)">Slett</a></li>
+                      </ul>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <p class="placeholder-glow if-copying-active" v-if="isCopyInProgress">
+              <span class="placeholder col-12 if-copying-active"></span>
+            </p>
+            </div>
+          </div>
+
+          <!-- Placeholder if logged out -->
+          <div v-else>
+            <p>Logg inn for å se prosjekter</p>
+          </div>
+
         </div>
-      </div>
-      <div v-else>
-          <p>Logg inn for å se materialer</p>
       </div>
     </main>
     <nav-footer></nav-footer>
@@ -346,6 +353,10 @@
 </script>
 
 <style scoped>
+  h2 {
+    margin-bottom: 1.4rem;
+    margin-top: 0.2rem;
+  }
   .heading {
       width: 100%;
       padding: 0.1em;
@@ -375,6 +386,7 @@
     padding-top: 0;
     height: 2em;
   }
+  /* Set check box color */
   .custom-switch:checked {
     background-color: #28a745;
     border-color: #28a745;

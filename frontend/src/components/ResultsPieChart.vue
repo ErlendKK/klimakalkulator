@@ -75,7 +75,6 @@
     align-items: center;
     max-height: 220px;
     min-height: 220px;
-    border: 1px solid black;
     padding: 0.2em;
     margin-bottom: 1em;
   }

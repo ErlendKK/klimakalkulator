@@ -4,101 +4,105 @@
     
     <main class="container">
       <h2>{{ heading }}</h2>
-      <div v-if="isLoggedInComputed && currentProject">
+      <div class="card mb-3">
+        <div class="card-body">
+          <div v-if="isLoggedInComputed && currentProject">
 
-        <!-- Open productModal to add new product to the project -->
-        <button type="button" class="btn btn-success toggle-modal-button"
-          @click="toggleAddModal">
-          Nytt Produkt
-        </button>
-        <product-add-modal
-          :is-active="isAddModalActive"
-          @close="isAddModalActive = false"
-          @submit-product="handleAddModalSubmit">
-        </product-add-modal>
+            <!-- Open productModal to add new product to the project -->
+            <button type="button" class="btn btn-success toggle-modal-button"
+              @click="toggleAddModal">
+              Nytt Produkt
+            </button>
+            <product-add-modal
+              :is-active="isAddModalActive"
+              @close="isAddModalActive = false"
+              @submit-product="handleAddModalSubmit">
+            </product-add-modal>
 
-        <!-- Open productUpdateModal to add new product to the project -->
-        <Product-update-modal
-          v-if="isUpdateModalActive"
-          :is-active="isUpdateModalActive"
-          :productToBeUpdated="productToBeUpdated"
-          @close="isUpdateModalActive = false"
-          @submit-product="handleUpdateModalSubmit">
-        </Product-update-modal>
+            <!-- Open productUpdateModal to add new product to the project -->
+            <Product-update-modal
+              v-if="isUpdateModalActive"
+              :is-active="isUpdateModalActive"
+              :productToBeUpdated="productToBeUpdated"
+              @close="isUpdateModalActive = false"
+              @submit-product="handleUpdateModalSubmit">
+            </Product-update-modal>
   
-        <!-- Table of products included in the project -->
-        <div class="table-responsive-md">
-          <table class="table table-sm table-hover" >
-            <thead class="table-light">
-              <tr>
-                <!-- For sortable columns display sort-icon and listen for click -->
-                <th v-for="entry in tableEntries" :key="entry">
-                  <template  v-if="entry.sortable">
-                    <button type="button" class="btn btn-default heading text-start text-nowrap"
-                      @click="sortTable(entry)">
-                      {{ entry.heading }}
-                      <i
-                        :class="{
-                          'fa-solid': true, 
-                          'fa-sort': entry.body !== currentSort, 
-                          'fa-sort-down': entry.body === currentSort && sortAscending, 
-                          'fa-sort-up': entry.body === currentSort && !sortAscending,
-                          'faded-icon': true 
-                        }">
-                      </i>
-                    </button>
-                  </template>
-                  <template  v-else>
-                    <button type="button" disabled class="btn btn-default border border-0 heading" style="padding-left: 0; font-weight: bold;">
-                    {{ entry.heading }}
-                    </button>
-                  </template>
-                </th>
-                <!-- Empty heading for dropdown-menus -->
-                <th></th> 
-              </tr>
-            </thead>
-            <tbody>
-              <tr 
-                v-for="(product, index) in sortedProducts" 
-                :key="index">
-                <td>{{ product.bygningsdel }}</td>
-                <td>{{ product.produktgruppe }}</td>
-                <td>{{ product.displayedName }}</td>
-                <td>{{ product.type }}</td>
-                <td>{{ product.quantity }}</td>
-                <td readonly>{{ product.unit }}</td>
+            <!-- Table of products included in the project -->
+            <div class="table-responsive-md">
+              <table class="table table-sm table-hover" >
+                <thead class="table-light">
+                  <tr>
+                    <!-- For sortable columns display sort-icon and listen for click -->
+                    <th v-for="entry in tableEntries" :key="entry">
+                      <template  v-if="entry.sortable">
+                        <button type="button" class="btn btn-default heading text-start text-nowrap"
+                          @click="sortTable(entry)">
+                          {{ entry.heading }}
+                          <i
+                            :class="{
+                              'fa-solid': true, 
+                              'fa-sort': entry.body !== currentSort, 
+                              'fa-sort-down': entry.body === currentSort && sortAscending, 
+                              'fa-sort-up': entry.body === currentSort && !sortAscending,
+                              'faded-icon': true 
+                            }">
+                          </i>
+                        </button>
+                      </template>
+                      <template  v-else>
+                        <button type="button" disabled class="btn btn-default border border-0 heading" style="padding-left: 0; font-weight: bold;">
+                        {{ entry.heading }}
+                        </button>
+                      </template>
+                    </th>
+                    <!-- Empty heading for dropdown-menus -->
+                    <th></th> 
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr 
+                    v-for="(product, index) in sortedProducts" 
+                    :key="index">
+                    <td>{{ product.bygningsdel }}</td>
+                    <td>{{ product.produktgruppe }}</td>
+                    <td>{{ product.displayedName }}</td>
+                    <td>{{ product.type }}</td>
+                    <td>{{ product.quantity }}</td>
+                    <td readonly>{{ product.unit }}</td>
 
-                <!-- Dropdown menu for product-rows -->
-                <td>
-                  <div class="dropdown"> 
-                    <a class="btn ellipsis-container" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
-                      <i class="fa-solid fa-ellipsis"></i>
-                    </a>
-                    <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-                      <li><a class="dropdown-item" href="#" @click="editButtonHandler(product)">Rediger</a></li>
-                      <li><a class="dropdown-item" href="#" @click="copyButtonHandler(product)">Lag kopi</a></li>
-                      <div class="dropdown-divider"></div>
-                      <li><a class="dropdown-item" href="#" @click="deleteButtonHandler(product)">Slett</a></li>
-                    </ul>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <p class="placeholder-glow if-copying-active" v-if="isCopyInProgress">
-            <span class="placeholder col-12 if-copying-active"></span>
-          </p>
+                    <!-- Dropdown menu for product-rows -->
+                    <td>
+                      <div class="dropdown"> 
+                        <a class="btn ellipsis-container" href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
+                          <i class="fa-solid fa-ellipsis"></i>
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                          <li><a class="dropdown-item" href="#" @click="editButtonHandler(product)">Rediger</a></li>
+                          <li><a class="dropdown-item" href="#" @click="copyButtonHandler(product)">Lag kopi</a></li>
+                          <div class="dropdown-divider"></div>
+                          <li><a class="dropdown-item" href="#" @click="deleteButtonHandler(product)">Slett</a></li>
+                        </ul>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <p class="placeholder-glow if-copying-active" v-if="isCopyInProgress">
+                <span class="placeholder col-12 if-copying-active"></span>
+              </p>
+            </div>
+          </div>
+          <div v-else-if="userComputed === null">
+            <p>Logg inn for å se produkter</p>
+          </div>
+          <div v-else>
+            <p><router-link to="/projects">Velg et prosjekt</router-link></p>
+          </div>
         </div>
       </div>
-      <div v-else-if="userComputed === null">
-        <p>Logg inn for å se materialer</p>
-      </div>
-      <div v-else>
-        <p><router-link to="/projects">Velg et prosjekt</router-link></p>
-      </div>
     </main>
-
+      
     <nav-footer />
   </div>
 </template>
@@ -309,6 +313,10 @@
 </script>
   
 <style scoped>
+  h2 {
+      margin-bottom: 1.4rem;
+      margin-top: 0.2rem;
+    }
   .heading {
     width: 100%;
     padding: 0.1em;
