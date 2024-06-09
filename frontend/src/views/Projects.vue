@@ -401,13 +401,13 @@
 
     Thanks to leocaseiro https://dcblog.dev/stop-bootstrap-drop-menus-being-cut-off-in-responsive-tables  
   */
-  @media (max-width: 700px) {
-    .table-responsive-md .dropdown-menu {
+  @media (max-width: 991px) {
+    .table-responsive-lg .dropdown-menu {
       position: static !important;
       -webkit-overflow-scrolling: touch; /* Enables smooth scrolling on touch screens*/
     }
   }
-  @media (min-width: 701px) {
+  @media (min-width: 992px) {
     .table-responsive {
         overflow: visible;
     }
