@@ -1,0 +1,23 @@
+:root {
+    --header_color: rgb(246, 254, 240);
+    --vt-c-white-soft: #f9f9f9;
+    --vt-c-white-mute: #f1f1f1;
+}
+
+.layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; 
+  }
+  
+  main {
+    width: 90%;
+    margin-top: 4.5em;
+    padding-top: 0.5em;
+    flex: 1; 
+  }
+
+  #app {
+    /* background-color: var(--vt-c-white-soft); */
+    background-color: #f9f9f9;
+  }

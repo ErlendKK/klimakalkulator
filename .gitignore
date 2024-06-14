@@ -1,0 +1,8 @@
+# git add .gitignore
+# git commit -m "Add root level .gitignore to exclude testing directory and other files"
+# git push
+
+logs
+*.log
+Dokumenter
+node_modules
