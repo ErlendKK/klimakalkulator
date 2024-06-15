@@ -1,0 +1,16 @@
+name: klimakalkulator
+services:
+  - name: flask-app
+    ports:
+      - 80
+    buildpacks:
+      - heroku/python
+    env:
+      - name: PORT
+        value: "80"
+    source:
+      type: github
+      repo: ErlendKK/klimakalkulator
+      branch: main
+    run:
+      command: gunicorn --chdir server --bind :$PORT app:app
