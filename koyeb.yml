@@ -1,6 +1,8 @@
 name: klimakalkulator
 services:
   - name: flask-app
+    buildpacks:
+      - heroku/python
     build:
       steps:
         - name: Install Python dependencies
