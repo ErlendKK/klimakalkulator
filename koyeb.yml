@@ -19,4 +19,5 @@ services:
       repo: ErlendKK/klimakalkulator
       branch: main
     run:
-      command: gunicorn --chdir server --bind :$PORT app:app
+      command: |
+        export PATH=$PATH:/usr/local/python3/bin && pip install gunicorn && gunicorn --chdir server --bind :$PORT app:app
