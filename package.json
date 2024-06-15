@@ -9,7 +9,8 @@
     "test-db": "cd server/scripts && python test_db.py",
     "dev-front": "cd frontend && npm run dev",
     "setup": "npm install && cd server && pip install -r requirements.txt && cd ../frontend && npm install && cd ..",
-    "push": "git add . && git commit -m \"Update changes\" && git push origin main"
+    "push": "git add . && git commit -m \"Update changes\" && git push origin main",
+    "build-vue": "cd frontend && npm run build"
   },
   "keywords": [],
   "author": "",

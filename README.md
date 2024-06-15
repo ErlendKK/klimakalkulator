@@ -1,8 +1,8 @@
-# Klimakalkulator: Klimagassberegninger i bygningsprosjekter
+# Klimakalkulator: Klimagassberegninger i byggeprosjekter
 
 ## Om
 
-Serversiden er skrevet i Flask.py, med en sqlite database ("userdata.db") som består av 4 tabeller "Users", "Projects", "Products", og "EmissionFactors". Produktdata (inkl. utlsippsfaktorer) hentes fra API-en til Eco Portal. Klientsiden er skrevet med Vue 3 (Options API) Single File Components med vite, vue-router, og pinia.
+Serversiden er skrevet i Flask.py med en postgreSQL database bestående av 4 tabeller: "ssers", "projects", "products", og "emission_factors". Produktdata (inkl. utlsippsfaktorer) hentes fra API-en til Eco Portal. Klientsiden er skrevet med Vue 3 (Options API) Single File Components og Bootstrap 5, med Vite, Vue-router, og Pinia.
 
 # Installasjon
 
