@@ -1,10 +1,14 @@
 name: klimakalkulator
 services:
   - name: flask-app
+    build:
+      steps:
+        - name: Install Python dependencies
+          run: |
+            cd server
+            pip install -r requirements.txt
     ports:
       - 80
-    buildpacks:
-      - heroku/python
     env:
       - name: PORT
         value: "80"
