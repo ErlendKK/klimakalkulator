@@ -91,47 +91,48 @@
       
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary btn-md" style="min-width:5em" @click="handleClose">Avbryt</button>
-        <button type="submit" class="btn btn-success btn-md" style="min-width:8em">Oppdater</button>
+        <button type="submit" class="btn btn-primary btn-md" style="min-width:8em">Oppdater</button>
       </div>
     </form>
   </ModalComponent>
 </template>
     
-<script>
-  import { klimagassreferanser } from '../utils/breeam.js'
-  import { getTodaysDate } from '../utils/misc.js'
+<script setup lang="ts">
+  import { klimagassreferanser } from '../utils/breeam.js';
+  import { getTodaysDate } from '../utils/misc';
   import ModalComponent from '../components/ModalComponent.vue';
   import cloneDeep from 'lodash/cloneDeep';
+  import { computed, onMounted, ref } from 'vue';
+  import { Product, Project } from '../interfaces/interfaces'
 
-  export default {
-    name: 'ProjectUpdateModal',
-    props: {
-      isActive: Boolean,
-      projectToBeUpdated: Object,
-    },
-    components: {
-      ModalComponent
-    },       
-    data() {
-      return {
-        title: "Oppdater prosjektet",
-        bygningskategorier: Object.keys(klimagassreferanser),
-        newProject: cloneDeep(this.projectToBeUpdated)
-      }
-    },
-    mounted() {
-      console.log(this.newProject)
-    },
-    methods: {  
-      handleClose() {
-        this.$emit('close');
-      },
-      handleSubmit() {
-        console.log(this.newProject);
-        // NB! Keep snake case to stay in sync with db
-        this.newProject.updated_date = getTodaysDate();
-        this.$emit('submit-project', this.newProject);
-      }
-    }
+  const title = "Oppdater prosjektet";
+
+  const props = defineProps<{ 
+    isActive: Boolean,
+    projectToBeUpdated: Project,
+  }>();
+
+  const emit = defineEmits(['close', 'submit-project']);     
+
+  const bygningskategorier = Object.keys(klimagassreferanser);
+  const newProject = cloneDeep(props.projectToBeUpdated);
+  onMounted(() => console.log(newProject));
+
+  function handleClose(): void {
+    emit('close');
   }
+
+  function handleSubmit(): void {
+    console.log(newProject);
+    // NB! Keep snake case to stay in sync with db
+    newProject.updated_date = getTodaysDate();
+    emit('submit-project', newProject);
+  }
+</script>
+<script lang="ts">
+import { defineComponent } from 'vue';
+
+export default defineComponent({
+  name: 'ProjectUpdateModal',
+});
 </script>

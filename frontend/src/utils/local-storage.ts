@@ -1,4 +1,6 @@
-function saveToLocalStorage(key, value) {
+import { SortPreference } from '../interfaces/interfaces'
+
+function saveToLocalStorage(key: string, value: any): boolean {
     try {
       localStorage.setItem(key, JSON.stringify(value));
       return true;
@@ -8,7 +10,7 @@ function saveToLocalStorage(key, value) {
     }
   }
   
-  function getFromLocalStorage(key) {
+  function getFromLocalStorage(key: string): SortPreference | null {
     try {
       const value = localStorage.getItem(key);
       return value ? JSON.parse(value) : null;
@@ -18,7 +20,7 @@ function saveToLocalStorage(key, value) {
     }
   }
   
-  function removeFromLocalStorage(key) {
+  function removeFromLocalStorage(key: string): boolean {
     try {
       localStorage.removeItem(key);
       return true;

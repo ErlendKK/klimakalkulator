@@ -109,8 +109,9 @@ def validate_and_return_user_data(data):
     user_data = {k:v for k, v in user.items() if k != 'password_hash'}
     user_data['projects'] = get_project_data_from_db(user_data['user_id'])
     user_data['status'] = 'success'
+    print(user_data)
 
-    return user_data
+    return {'status': 'success', 'message': '', 'data': user_data}
 
 
 ################################################################
@@ -179,7 +180,7 @@ def add_project_to_db(project_data):
 
             conn.commit()
             print(Fore.GREEN+f'add_project_to_db SUCCEEDED for user_id: {project_data['user_id']}, project name: {project_data["name"]}')
-            return {'project_id': project_data['project_id'], "status": "success", 'data': project_data}
+            return {"status": "success", 'message': '', 'data': project_data}
 
     except Exception as e:
         print(Fore.RED+f'add_project_to_db FAILED for: {project_data["name"]}. Error: {e}')
@@ -259,15 +260,14 @@ def delete_project_data(project_id):
             # Return status message indicating whether or not any data was deleted
             if project_rows_deleted > 0:
                 print(Fore.GREEN+f'delete_project_data SUCCEEDED for project ID: {project_id}; entries deleted: {project_rows_deleted}')
-                return {"status": "success", "message": f"prosjektnr {project_id} er slettet"}
+                return {"status": "success"}
             else:
                 print(Fore.RED+f'delete_project_data FAILED: No project found with ID {project_id}')
-                return {"status": "failed", "message": f"prosjektnr {project_id} ble ikke funnet"}
+                return {"status": "failed"}
 
     except Exception as e:
-        message = f"delete_project_data: Failed to connect to db or execute query: {e}"
-        print(Fore.RED+message)
-        return {"status": "failed", "message": message}
+        print(Fore.RED+f"delete_project_data: Failed to connect to db or execute query: {e}")
+        return {"status": "failed"}
 
 
 ################################################################

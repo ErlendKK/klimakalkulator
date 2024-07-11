@@ -50,7 +50,7 @@ else:
     CORS(app, supports_credentials=True) # Allow all origins
     print(Fore.LIGHTGREEN_EX+"Running with built frontend...")
 
-
+# Base routing-function for built app
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def catch_all(path):
@@ -78,8 +78,9 @@ def register_user():
     name = request.form['name']
     email = request.form['email']
     password = request.form['password']
-    stay_logged_in = request.form['stayLoggedIn'] == 'true'  # Convert to boolean
+    stay_logged_in = request.form['stayLoggedIn'] == 'true'
     submitted_data = {'name': name, 'email': email, 'password': password, 'stayLoggedIn': stay_logged_in}
+    print(submitted_data)
 
     validation_result = validate_user_registration(submitted_data)
     print(color_text(validation_result))
@@ -98,7 +99,7 @@ def register_user():
     if db_response['status'] == "success":
         updated_user_data = {k:v for k, v in db_response["user_data"].items() if k != 'password_hash'}
         establish_session(updated_user_data)
-        return jsonify({"status": "success", "user_data": updated_user_data }), 200
+        return jsonify({"status": "success", "message": "", "data": updated_user_data }), 200
     else:
         return jsonify(db_response), 401
 
@@ -177,19 +178,17 @@ def login_user():
     Otherwise; returns an error message
     """
     login_data = request.get_json()
-    print('login_data')
     print(login_data)
     user_data = validate_and_return_user_data(login_data) # returns (name, email, photo_filename, and project_list)
-    
-    print('user_data')
     print(color_text(user_data))
 
     if user_data['status'] != 'success':
         return jsonify(user_data), 401 
     else:
-        user_data['stayLoggedIn'] = login_data['stayLoggedIn']
-        establish_session(user_data) 
+        user_data['data']['stayLoggedIn'] = login_data['stayLoggedIn']
+        establish_session(user_data['data']) 
         return jsonify(user_data), 200
+
 
 
 def establish_session(user_data):
@@ -198,6 +197,7 @@ def establish_session(user_data):
     Clears any existing user_data in session
     """
     session.clear()
+    print(user_data)
     user_data['photo_url'] = get_photo_URL(user_data)
     session['user_id'] = user_data['user_id']
     session['project_ids'] = [project['project_id'] for project in user_data['projects']]
@@ -211,7 +211,7 @@ def logout():
     session.pop('user_id', None)
     session['stay_logged_in'] = False
     session['project_ids'] = []
-    return jsonify({"isLoggedIn": False}), 200
+    return jsonify({"isLoggedIn": False, 'status': 'success'}), 200
 
 
 @app.route('/session', methods=['GET'])
@@ -267,7 +267,7 @@ def register_project():
     authentication_response = authenticate_user(project_data)
     if authentication_response['status'] != 'success':
         return jsonify(authentication_response), 401
-    
+
     # Check if input data is valid. If not, return status: failed and error-message
     validation_response = validate_project_data(project_data)
     print(color_text(validation_response))
@@ -277,7 +277,7 @@ def register_project():
     # Add prosject to db. Upon error, return status: failed and error-message
     db_response = add_project_to_db(project_data)
     if db_response['status'] == "success":
-        session['project_ids'].append(db_response['project_id'])
+        session['project_ids'].append(db_response['data']['project_id'])
         session.modified = True
         return jsonify(db_response), 200
     else:
@@ -296,7 +296,7 @@ def authenticate_user(data):
         message = 'Prosjekteier er ikke logget inn, eller mangler rettigheter til å oppdatere prosjektet'
         return {'status': 'failed', 'message': message}
     
-    return {'status': 'success'}
+    return {'status': 'success', 'message': ''}
 
 
 def validate_project_data(data):
@@ -405,6 +405,7 @@ def add_product_to_project():
     Otherwise; returns an error message
     """
     data = request.get_json()
+    print('add_product_to_project called')
     print(data)
 
     if data['project_id'] not in session['project_ids']:
@@ -416,7 +417,9 @@ def add_product_to_project():
     added_product['unit']  = data.get('unit', None)
 
     if added_product['status'] == 'success':
-        return jsonify(added_product), 200
+        del added_product['status'] # Status is returned seperately
+        message = f'Produktet {added_product['name']} er lagt til i prosjektet'
+        return jsonify({'status': 'success', 'message': message, 'data': added_product }), 200
     else:
         return jsonify(added_product), 400  
     

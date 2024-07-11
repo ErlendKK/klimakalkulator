@@ -8,7 +8,17 @@ const klimagassreferanser = {
     "Uoppvarmet kjeller": 3.6
 };
 
-const bygningsdeler = [
+interface Produktgruppe {
+  gruppe: string;
+  nummer: number;
+}
+interface Bygningsdel {
+  bygningsdel: string;
+  nummer: number;
+  produktgrupper: Produktgruppe[];
+}
+
+const bygningsdeler: Bygningsdel[] = [
     {
       bygningsdel: "Grunn og fundamenter",
       nummer: 21,
@@ -113,6 +123,5 @@ const bygningsdeler = [
       ]
     }
   ];
-
 
 export { klimagassreferanser, bygningsdeler };

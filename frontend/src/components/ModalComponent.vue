@@ -1,6 +1,6 @@
 <!-- Boilerplate Bootstrap Modal -->
 <template>
-  <div >
+  <div>
     <div v-if="isActive"
       class="modal fade"
       :class="{ show: isActive, 'd-block': isActive }"
@@ -29,6 +29,7 @@
 
 <script>
 export default {
+  name: "ModalComponent",
   props: {
     isActive: Boolean,
     title: String
@@ -40,3 +41,8 @@ export default {
   }
 }
 </script>
+<style>
+  modal {
+    position: absolute;
+  }
+</style>

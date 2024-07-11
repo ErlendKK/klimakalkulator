@@ -91,71 +91,52 @@
       
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary btn-md" style="min-width:5em" @click="handleClose">Avbryt</button>
-        <button type="submit" class="btn btn-success btn-md" style="min-width:8em">Opprett</button>
+        <button type="submit" class="btn btn-primary btn-md" style="min-width:8em">Opprett</button>
       </div>
     </form>
   </ModalComponent>
 </template>
   
-<script>
-  import { klimagassreferanser } from '../utils/breeam.js'
-  import { getTodaysDate } from '../utils/misc.js'
+<script setup lang="ts">
+  import { klimagassreferanser } from '../utils/breeam.js';
+  import { getTodaysDate } from '../utils/misc';
   import ModalComponent from './ModalComponent.vue';
-  import { displayErrorToast } from '../utils/toasts.js'
+  import { displayErrorToast } from '../utils/toasts';
+  import { initializeProject } from '../utils/initializers.js';
+  import { Project } from '../interfaces/interfaces';
+  
+  const props = defineProps<{ isActive: Boolean }>();
+  const emit = defineEmits(['close', 'submit-project']);
 
-  export default {
-    name: 'ProjectUpdateModal',
-    props: {
-      isActive: Boolean,
-    },
-    components: {
-      ModalComponent
-    },       
-    data() {
-      return {
-        title: "Legg til nytt prosjekt",
-        bygningskategorier: Object.keys(klimagassreferanser),
-        newProject: {
-          'name': '',
-          'type': '',
-          'bta': 0,
-          'analyseperiode': 50,
-          'prosjektstart': 2024,
-          'address': '',
-          "created_date": '',
-          "updated_date": '',
-          "active": true,
-        },
-      }
-    },
-    methods: {
-      handleClose() {
-        this.$emit('close');
-        this.resetNewProject();
-      },
-      // Ensures that newProduct is refreshed everytime the Modal is opened.
-      resetNewProject() {
-        this.newProject = {
-          'name': '',
-          'type': '',
-          'bta': 0,
-          'analyseperiode': 50,
-          'prosjektstart': 2024,
-          'address': '',
-          "created_date": '',
-          "updated_date": '',
-          "active": true,
-        }
-      },
-      handleSubmit() {
-        const currentDate = getTodaysDate();
-        // NB! Keep snake case to stay in sync with db
-        this.newProject.created_date = currentDate;
-        this.newProject.updated_date = currentDate;
+  const title = "Legg til nytt prosjekt";
+  const bygningskategorier = Object.keys(klimagassreferanser);
 
-        this.$emit('submit-project', this.newProject);
-        setTimeout(this.resetNewProject, 1000);
-      }
-    }
-  };
+  let newProject: Project = initializeProject();
+
+  function handleClose(): void {
+    emit('close');
+    setTimeout(initializeProject, 1000);
+  }
+
+  /** 
+   * Initializes created and updated date as todays date
+   * Emits newProject, then resets it after a short delay
+   */
+  function handleSubmit(): void {
+    const currentDate = getTodaysDate();
+    // NB! Keep snake case to stay in sync with db
+    newProject.created_date = currentDate;
+    newProject.updated_date = currentDate;
+
+    emit('submit-project', newProject);
+    setTimeout(initializeProject, 1000);
+  }
+
+</script>
+<script lang="ts">
+import { defineComponent } from 'vue';
+
+export default defineComponent({
+  name: 'ProjectAddModal',
+});
 </script>

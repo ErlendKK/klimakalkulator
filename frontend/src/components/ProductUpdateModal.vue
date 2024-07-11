@@ -169,149 +169,154 @@
       
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary btn-md" style="min-width:5em" @click="handleClose">Avbryt</button>
-        <button type="submit" class="btn btn-success btn-md" style="min-width:8em">Oppdater</button>
+        <button type="submit" class="btn btn-primary btn-md" style="min-width:8em">Oppdater</button>
       </div>
     </form>
   </ModalComponent>
 </template>
+
     
-<script>
+<script setup lang="ts">
   import ModalComponent from '../components/ModalComponent.vue';
   import { bygningsdeler } from '../utils/breeam.js';
-  import { setDisplayedName } from '../utils/misc.js'
-  import { getData } from '../utils/http-requests.js';
+  import { setDisplayedName } from '../utils/misc'
+  import { initializeProduct } from '../utils/initializers'
+  import { getData } from '../utils/http-requests';
+  import { displayErrorToast } from '../utils/toasts'
   import { useAuthStore } from '../stores/authStore';
-  import { displayErrorToast } from '../utils/toasts.js'
   import cloneDeep from 'lodash/cloneDeep';
-    
-  export default {
-    name: 'ProductUpdateModal',
-    setup() {
-      const authStore = useAuthStore();
-      const currentProjectId = authStore.currentProject.project_id;
+  import { computed, onMounted, ref } from 'vue';
+  import { ServerResponse, Product, EmissionDataResponse } from '../interfaces/interfaces'
 
-      return { currentProjectId };
-    },
-    props: {
-      isActive: Boolean, // Used to display/ hide the modal
-      productToBeUpdated: Object,
-    },
-    components: {
-      ModalComponent
-    },
-    data() {
-      return {
-        title: "Oppdater produktet",
-        bygningsdelsNavn: bygningsdeler.map(del => `${del.bygningsdel} (${del.nummer})`),
-        bygningsdeler: bygningsdeler,
-        materialTyper: ["Alle"],
-        newProduct: { 
-          product: {}, 
-          displayedName: '',
-          bygningsdel: '' 
-        },
-        ecoPortalData: [],
-        productsForSelection: [],
-        ecoPortalStatus: 'idle',
-        selectedProduct: null,
-        selectedProductStatus: 'No product selected',
-        selectedProductData: {},
-      }
-    },
-    computed: {
-      produktgrupper() {
-        if (!this.newProduct.bygningsdel) return [];
+  const authStore = useAuthStore();
+  const emit = defineEmits(['close', 'submit-product']);
+  const currentProjectId = authStore.currentProject.project_id;
+  const title = "Oppdater produktet"
 
-        const valgtBygningsdel = bygningsdeler.find(del => 
-        `${del.bygningsdel} (${del.nummer})`.toLowerCase() === this.newProduct.bygningsdel.toLowerCase()
-        );
+  const props = defineProps<{ 
+    isActive: Boolean,
+    productToBeUpdated: Product,
+  }>();
 
-        const produktGrupper = valgtBygningsdel.produktgrupper.map(del => `${del.gruppe} (${del.nummer})`);
-        return produktGrupper;
-      },
-      filteredProducts() {
-        if (this.newProduct.type && this.newProduct.type !== "Alle" && this.productsForSelection.length) {
-          const filteredList = this.productsForSelection.filter(product => 
-            product.classific === this.newProduct.type
-          );
-          return filteredList
-        }
-        return this.ecoPortalData; 
-      }
-    },
-    async mounted() {
-      // fetch data about material properties inlc. emission factors
-      if (this.ecoPortalStatus !== 'success') {
-        await this.fetchFullProductList();
-        this.initializeProductOptions();
-      }
-    },
-    methods: {
-      // fetch list of product to be displayed in product dropdown
-      async fetchFullProductList() {
-        if (this.ecoPortalStatus === 'loading') return;
+  const bygningsdelsNavn = computed(() => {
+    return bygningsdeler.map(item => `${item.bygningsdel} (${item.nummer})`);
+  });
 
-        this.ecoPortalStatus = 'loading';
-        const db_response = await getData('/products/list');
-        
-        if (db_response.status === 'failed') {
-          this.ecoPortalStatus = 'failed';
-          displayErrorToast('En feil oppstod ved lasting av produktdata')
-          return;
-        }
+  const bygningsdelerRef = ref(bygningsdeler);
+  let materialTyper = ref(["Alle"]);
 
-        // Limit name length to avoid overflow. Fill the list materialTyper
-        const productList = db_response.data;
-        const classifics = new Set()
-        productList.forEach(product => {
-          classifics.add(product.classific)
-          product.displayedName = setDisplayedName(product, 45);
-          product['project_id'] = this.currentProjectId;
-        });
+  let newProduct = ref<Product>(initializeProduct());
 
-        this.materialTyper = ['Alle', ...classifics];
-        this.ecoPortalData = productList;
-        console.log(this.ecoPortalData)
-        this.ecoPortalStatus = 'success';
-      },
-      initializeProductOptions() {
-        this.newProduct = cloneDeep(this.productToBeUpdated);
-        this.newProduct.displayedName = setDisplayedName(this.newProduct, 45);
-        this.newProduct.product = {...this.newProduct};
-        console.log(this.newProduct)
-        this.productsForSelection = this.ecoPortalData.filter(product => product.uuid !== this.newProduct.uuid);
-      },
-      handleClose() {
-        this.$emit('close');
-      },
-      // send event to parent component and reset newProduct for the next time Modal is opened.
-      handleSubmit() {
-        this.newProduct.product_id = this.productToBeUpdated.product_id;
-        this.$emit('submit-product', this.newProduct);
-      },
-      // fetch properties for the selected product, incl. emission factors
-      async fetchEmissionData(product) {
-        console.log('fetchEmissionData: ', product)
-        const uuid = product.uuid;
-        console.log(uuid)
-        const emissionData = await getData(`/products/emission-data/${uuid}`);
+  const ecoPortalData = ref<any[]>([]);
+  const productsForSelection = ref<Product[]>([]);
+  const ecoPortalStatus = ref('idle');
+  const selectedProduct = ref<Product | null>(null);
+  let selectedProductStatus = ref('No product selected');
+  const selectedProductData = ref<any>({});
 
-        if (emissionData.status === 'failed') {
-          this.selectedProductStatus = 'failed to load data';
-          displayErrorToast('En feil oppstod ved lasting av utslippsfaktorer')
-          return;
-        }
+  const produktgrupper = computed(() => {
+  if (!newProduct.value.bygningsdel) return [];
 
-        console.log('data.name: ' + product.name, product);
-        product.displayedName = setDisplayedName(product, 30);
-        product.emission_factors = emissionData.emission_factors;
-        product.unit = emissionData.unit;
-        this.newProduct = Object.assign(this.newProduct, product);
-        this.selectedProductStatus = 'success';
-        console.log(this.newProduct)
-      }
-    }
+  const valgtBygningsdel = bygningsdeler.find(del => 
+    `${del.bygningsdel} (${del.nummer})`.toLowerCase() === newProduct.value.bygningsdel.toLowerCase()
+  );
+
+  if (!valgtBygningsdel) return [];
+
+  return valgtBygningsdel.produktgrupper.map(del => `${del.gruppe} (${del.nummer})`);
+});
+
+const filteredProducts = computed(() => {
+  if (newProduct.value.type && newProduct.value.type !== "Alle" && productsForSelection.value.length) {
+    return productsForSelection.value.filter(product => 
+      product.classific === newProduct.value.type
+    );
   }
+  return ecoPortalData.value; 
+});
+
+onMounted(async () => {
+  // Fetch data about material properties including emission factors
+  if (ecoPortalStatus.value !== 'success') {
+    await fetchFullProductList();
+    initializeProductOptions();
+  }
+});
+
+// fetch list of product to be displayed in product dropdown
+async function fetchFullProductList(): Promise<void> {
+  if (ecoPortalStatus.value === 'loading') return;
+
+  ecoPortalStatus.value = 'loading';
+  const db_response = await getData('/products/list');
+  
+  if (db_response.status === 'failed') {
+    ecoPortalStatus.value = 'failed';
+    displayErrorToast('En feil oppstod ved lasting av produktdata');
+    return;
+  }
+
+  // Limit name length to avoid overflow. Fill the list materialTyper
+  const productList = db_response.data as Product[];
+  const classifics = new Set<string>();
+  productList.forEach(product => {
+    classifics.add(product.classific);
+    product.displayedName = setDisplayedName(product, 45);
+    product['project_id'] = currentProjectId;
+  });
+
+  materialTyper.value = ['Alle', ...Array.from(classifics)];
+  ecoPortalData.value = productList;
+  console.log(ecoPortalData);
+  ecoPortalStatus.value = 'success';
+}
+
+function initializeProductOptions(): void {
+  newProduct.value = cloneDeep(props.productToBeUpdated);
+  newProduct.value.displayedName = setDisplayedName(newProduct.value, 45);
+  newProduct.value.product = {...newProduct.value};
+  console.log(newProduct.value)
+  productsForSelection.value = ecoPortalData.value.filter(product => product.uuid !== newProduct.value.uuid);
+}
+
+function handleClose(): void {
+  emit('close');
+}
+
+function handleSubmit(): void {
+  newProduct.value.product_id = props.productToBeUpdated.product_id;
+  emit('submit-product', newProduct.value);
+}
+
+// fetch properties for the selected product, incl. emission factors
+async function fetchEmissionData(product) {
+  console.log('fetchEmissionData: ', product)
+  const uuid = product.uuid;
+  const db_response = await getData(`/products/emission-data/${uuid}`);
+
+  if (db_response.status === 'failed') {
+    selectedProductStatus.value = 'failed to load data';
+    displayErrorToast('En feil oppstod ved lasting av utslippsfaktorer')
+    return;
+  }
+
+  console.log('data.name: ' + product.name, product);
+  product.displayedName = setDisplayedName(product, 30);
+
+  const productData = db_response.data as EmissionDataResponse;
+  product.emission_factors = productData.emission_factors;
+  product.unit = productData.unit;
+  newProduct.value = Object.assign(newProduct.value, product);
+  selectedProductStatus.value = 'success';
+  console.log(newProduct.value)
+}
+</script>
+<script lang="ts">
+import { defineComponent } from 'vue';
+
+export default defineComponent({
+  name: 'ProductUpdateModal',
+});
 </script>
 
 <style scoped>

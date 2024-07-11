@@ -12,10 +12,10 @@ def fetch_productlist():
     Returns the product list with a status message indicating success or failure.
     """
     query_string  = '?search=true&validUntil=2024&format=JSON'
-    headers = {'Authorization': f'Bearer {ECOPORTAL_API_TOKEN}'}
+    # headers = {'Authorization': f'Bearer {ECOPORTAL_API_TOKEN}'}
     
     try:
-        response = requests.get(f'{ECOPORTAL_BASE_URL}{query_string}', headers=headers)
+        response = requests.get(f'{ECOPORTAL_BASE_URL}{query_string}')
         response.raise_for_status()
         data = response.json()
         items = data.get('data', []) 
@@ -62,11 +62,9 @@ def fetch_emission_factors(uuid):
     Returns this information with a status message indicating success or failure.
     """
     query_string = '?format=JSON&view=extended'
-    headers = {
-        'Authorization': f'Bearer {ECOPORTAL_API_TOKEN}'
-    }
+    # headers = {'Authorization': f'Bearer {ECOPORTAL_API_TOKEN}'}
     path = f'{ECOPORTAL_BASE_URL}/{uuid}{query_string}'
-    response = requests.get(path, headers=headers)
+    response = requests.get(path)
 
     if response.status_code != 200:
         print(Fore.RED+"fetch_emission_factors FAILED to fetch data, status code:", response.status_code)
@@ -77,13 +75,12 @@ def fetch_emission_factors(uuid):
         emission_factors = extract_emission_factors(lca_data)
         unit_data = extract_unit_data(lca_data)
 
-        return_values = {
+        data = {
             'emission_factors': emission_factors,
             'unit': unit_data.get('referenceUnit', None),
-            'status': 'success'
         }
 
-        return return_values
+        return {'status': 'success', 'message':'', 'data': data}
     
     except ValueError as e:
         print(Fore.RED+f"fetch_emission_factors FAILED: {e}")

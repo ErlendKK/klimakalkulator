@@ -57,7 +57,7 @@
         <!-- Dropdown menu for selecting product -->
         <div class="col-sm-6">         
           <label for="produktvalg-dropdown" class="form-label">Produkt</label>
-          <template v-if="newProduct.product.EPD_URL">
+          <template v-if="newProduct.product?.EPD_URL">
             <a :href="newProduct.product.EPD_URL" target="_blank" rel="noopener noreferrer"><i class="bi bi-link epd-link"></i></a>
           </template>
           <select id="produktvalg-dropdown dropdown-toggle dropdown-toggle-split" class="form-control" 
@@ -88,8 +88,6 @@
             id="produktmengde-input" 
             v-model="newProduct.quantity"
             placeholder="Oppgi mengde"
-            min="0.01" 
-            step="any"
             required>
         </div>
 
@@ -136,158 +134,146 @@
       
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary btn-md" style="min-width:5em" @click="handleClose">Avbryt</button>
-        <button type="submit" class="btn btn-success btn-md" style="min-width:8em">Legg til</button>
+        <button type="submit" class="btn btn-primary btn-md" style="min-width:8em">Legg til</button>
       </div>
     </form>
   </ModalComponent>
 </template>
-    
-<script>
+
+<script setup lang="ts">
   import ModalComponent from './ModalComponent.vue';
   import { bygningsdeler } from '../utils/breeam.js'
-  import { setDisplayedName } from '../utils/misc.js'
-  import { getData } from '../utils/http-requests.js'
-  import { displayErrorToast, displayWarningToast } from '../utils/toasts.js'
+  import { setDisplayedName } from '../utils/misc'
+  import { initializeProduct } from '../utils/initializers'
+  import { getData } from '../utils/http-requests'
+  import { displayErrorToast, displayWarningToast } from '../utils/toasts'
+  import { computed, onMounted, ref } from 'vue';
+  import { ServerResponse, Product, EmissionFactor, EmissionDataResponse } from '../interfaces/interfaces'
+
+  const props = defineProps<{ isActive: Boolean }>();
+  const emit = defineEmits(['close', 'submit-product']);
     
-  export default {
-    name: 'ProductModal',
-    components: {
-      ModalComponent
-    },
-    props: {
-      isActive: Boolean, // Used to display/ hide the modal
-    },
-    data() {
-      return {
-        title: "Legg til nytt produkt",
-        bygningsdelsNavn: bygningsdeler.map(item => `${item.bygningsdel} (${item.nummer})`),
-        bygningsdeler: bygningsdeler,
-        materialTyper: ['Alle'],
+  const title = "Legg til nytt produkt"
+  const materialTyper = ref(['Alle']);
+  const searchQuery = ref('');
+  const ecoPortalData = ref<any[]>([]);
+  const ecoPortalStatus = ref('idle');
+  const selectedProductStatus = ref('No product selected');
 
-        newProduct: {
-          'bygningsdel': '',
-          'produktgruppe': '',
-          'name': '',
-          'displayedName': '',
-          'type': '',
-          "product": '',
-          "utskiftingsintervall": 50,
-          "vedlikeholdsutslipp": 0,
-          "quantity": 0,
-          "unit": '',
-        },
-        
-        searchQuery: '',
-        ecoPortalData: [],
-        ecoPortalStatus: 'idle',
-        selectedProductStatus: 'No product selected',
-      }
-    },
-    computed: {
-      produktgrupper() {
-        if (!this.newProduct.bygningsdel) {
-        return [];
-        }
+  const bygningsdelsNavn = computed(() => {
+    return bygningsdeler.map(item => `${item.bygningsdel} (${item.nummer})`);
+  });
 
-        const valgtBygningsdel = bygningsdeler.find(item => `${item.bygningsdel} (${item.nummer})`.toLowerCase() === this.newProduct.bygningsdel.toLowerCase());
-        const produktGrupper = valgtBygningsdel.produktgrupper.map(item => `${item.gruppe} (${item.nummer})`);
-        return produktGrupper;
-      },
-      displayUnit() {
-        return this.selectedProductStatus === 'success' && this.newProduct.unit;
-      },
-      filteredProducts() {
-        if (this.newProduct.type && this.newProduct.type !== "Alle" && this.ecoPortalData.length) {
-          const filteredProds = this.ecoPortalData.filter(product => 
-            product.classific === this.newProduct.type
-          );
-          return filteredProds
-        }
-        return this.ecoPortalData; 
-      }
-      
-    },
-    mounted() {
-      // fetch data about material properties inlc. emission factors
-      if (this.ecoPortalStatus !== 'success') {
-        this.fetchFullProductList();
-      }
+  // TODO: Check if newProduct needs to be ref()
+  let newProduct = ref<Product>(initializeProduct());
+ 
+  const produktgrupper = computed(() => {
+    if (!newProduct.value.bygningsdel) return [];
 
-    },
-    methods: {
-      // fetch list of product to be displayed in product dropdown
-      async fetchFullProductList() {
-        if (this.ecoPortalStatus === 'loading') return;
+    // Select bygningsdel based on name + number
+    const valgtBygningsdel = bygningsdeler.find(item => {
+      return `${item.bygningsdel} (${item.nummer})`.toLowerCase() === newProduct.value.bygningsdel.toLowerCase();
+    });
 
-        this.ecoPortalStatus !== 'loading';
-        const db_response = await getData('/products/list');
-        
-        if (db_response.status === 'failed') {
-          this.ecoPortalStatus = 'failed';
-          displayWarningToast('En feil oppstod ved lasting av produktdata');
-          return;
-        }
-
-        // Limit name length to avoid overflow. Fill the list materialTyper
-        const productList = db_response.data
-        const classifics = new Set()
-        productList.forEach(product => {
-          classifics.add(product.classific)
-          product.displayedName = setDisplayedName(product, 45)
-        });
-
-        this.materialTyper = ['Alle', ...classifics];
-        this.ecoPortalStatus = 'success';
-        this.ecoPortalData = productList;
-      },
-      handleClose() {
-        this.$emit('close');
-        this.resetNewProduct();
-      },
-      resetNewProduct() {
-        this.newProduct = {
-          'bygningsdel': '',
-          'produktgruppe': '',
-          'name': '',
-          'displayedName': '',
-          'type': '',
-          "product": '',
-          "utskiftingsintervall": 50,
-          "vedlikeholdsutslipp": 0,
-          "quantity": 0,
-          "unit": '',
-        };
-      },
-
-      // send event to parent component and reset newProduct.
-      handleSubmit() {
-        this.$emit('submit-product', this.newProduct);
-        this.resetNewProduct();
-      },
-
-      // fetch properties for the selected product, incl. emission factors
-      async fetchEmissionData(selectedProduct) {
-        this.selectedProductStatus = 'loading data..';
-        const uuid = selectedProduct.uuid;
-        const emissionData = await getData(`/products/emission-data/${uuid}`);
-
-        if (emissionData.status === 'failed') {
-          this.selectedProductStatus = 'failed to load data';
-          displayErrorToast('Det oppstod en feil ved lastingen av utlsippsdata');
-          return;
-        }
-
-        console.log('data.name: ' + selectedProduct.name + '\n' + selectedProduct)
-        this.selectedProductStatus = 'success';
-        this.newProduct.product = selectedProduct;
-
-        this.newProduct.displayedName = setDisplayedName(selectedProduct, 45);
-        this.newProduct.emission_factors = {...emissionData.emission_factors};
-        this.newProduct.unit = emissionData.unit;
-        console.log(this.newProduct)
-      }
+    // If valgtBygningsdel is undefined, something has gone wrong
+    if (!valgtBygningsdel) {
+      console.error(`valgtBygningsdel was not found for newProduct.bygningsdel: ${newProduct.value.bygningsdel}`);
+      return [];
     }
+
+    const produktGrupper = valgtBygningsdel.produktgrupper.map(item => `${item.gruppe} (${item.nummer})`);
+    return produktGrupper;
+  })
+
+  function displayUnit(): boolean {
+    return selectedProductStatus.value === 'success' && !!newProduct.value.unit;
   }
+
+  const filteredProducts = computed((): object[] => {
+    if (newProduct.value.type && newProduct.value.type !== "Alle" && ecoPortalData.value.length) {
+      const filteredProds = ecoPortalData.value.filter(product => 
+        product.classific === newProduct.value.type
+      );
+      return filteredProds;
+    }
+    return ecoPortalData.value; 
+  })
+      
+  onMounted(() => {
+  if (ecoPortalStatus.value !== 'success') {
+    fetchFullProductList();
+  }
+});
+
+
+// fetch list of product to be displayed in product dropdown
+async function fetchFullProductList(): Promise<void> {
+  if (ecoPortalStatus.value === 'loading') return;
+
+  ecoPortalStatus.value = 'loading';
+  const db_response: ServerResponse = await getData('/products/list');
+  
+  if (db_response.status === 'failed') {
+    ecoPortalStatus.value = 'failed';
+    displayWarningToast('En feil oppstod ved lasting av produktdata');
+    return;
+  }
+
+  // Limit name length to avoid overflow. Fill the list materialTyper
+  const productList = db_response.data as Product[];
+  const classifics = new Set<string>();
+
+  productList.forEach(product => {
+    classifics.add(product.classific);
+    product.displayedName = setDisplayedName(product, 45);
+  });
+
+  materialTyper.value = ['Alle', ...Array.from(classifics)];
+  ecoPortalStatus.value = 'success';
+  ecoPortalData.value = productList;
+}
+
+function handleClose(): void  {
+  emit('close');
+  setTimeout(() => newProduct.value = initializeProduct(), 1000);
+}
+
+// send event to parent component and reset newProduct.
+function handleSubmit(): void  {
+  emit('submit-product', newProduct.value);
+  setTimeout(() => newProduct.value = initializeProduct(), 1000);
+}
+
+
+// fetch properties for the selected product, incl. emission factors
+async function fetchEmissionData(selectedProduct: Product): Promise<void> {
+  selectedProductStatus.value = 'loading data..';
+  const uuid = selectedProduct.uuid;
+  const db_response: ServerResponse = await getData(`/products/emission-data/${uuid}`);
+
+  if (db_response.status === 'failed') {
+    selectedProductStatus.value = 'failed to load data';
+    displayErrorToast('Det oppstod en feil ved lastingen av utlsippsdata');
+    return;
+  }
+
+  console.log('data.name: ' + selectedProduct.name + '\n' + selectedProduct);
+  selectedProductStatus.value = 'success';
+  newProduct.value.product = selectedProduct;
+  newProduct.value.displayedName = setDisplayedName(selectedProduct, 45);
+  
+  const productData = db_response.data as EmissionDataResponse;
+  newProduct.value.emission_factors = {...productData.emission_factors};
+  newProduct.value.unit = productData.unit as string;
+  console.log(newProduct.value);
+}
+</script>
+<script lang="ts">
+import { defineComponent } from 'vue';
+
+export default defineComponent({
+  name: 'ProductAddModal',
+});
 </script>
 
 <style scoped>
