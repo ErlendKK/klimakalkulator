@@ -2,7 +2,7 @@
 
 ## Om
 
-Klientsiden er skrevet med Vue 3 (Comnposition API og Typescript) Single File Components og Bootstrap 5, med Vue-router, og Pinia.
+Klientsiden er skrevet med Vue 3 (Composition API og Typescript) Single File Components og Bootstrap 5, med Vue-router, og Pinia.
 
 Serversiden er skrevet i Flask.py, med en sqlite database ("userdata.db"), som består av 4 tabeller "Users", "Projects", "Products", og "EmissionFactors". Produktdata, inkl. utlsippsfaktorer, hentes fra API-en til Eco Portal.
 
